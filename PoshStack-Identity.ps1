@@ -44,7 +44,7 @@ function Get-OpenStackIdentityProvider {
             $OpenStackId.APIKey   = $Credentials.CloudAPIKey
             $Global:OpenStackId = New-Object net.openstack.Providers.Rackspace.CloudIdentityProvider($OpenStackId)
 #            Return New-Object net.openstack.Providers.Rackspace.CloudIdentityProvider($OpenStackId)
-Return $Global:OpenStackId
+            Return $Global:OpenStackId
         }
         "OpenStack" {
             $CloudIdentityWithProject = New-Object net.openstack.Core.Domain.CloudIdentityWithProject
@@ -60,13 +60,13 @@ Return $Global:OpenStackId
 
 }
 
-
 function Get-OpenStackIdentityRole {
     param (
         [Parameter(Mandatory=$True)][string] $Account = $(throw "Please specify required Cloud Account with -Account parameter")
     )
 
-    Get-AuthToken($account)
+    $OpenStackIdentityProvider = Get-OpenStackIdentityProvider $Account
+    $OpenStackIdentityProvider.ListRoles($null, $null, $null, $null)
 
 <#
  .SYNOPSIS
@@ -126,16 +126,18 @@ function Get-OpenStackIdentityUser {
     $OpenStackIdentityProvider = Get-OpenStackIdentityProvider $Account
 
     if (-Not [string]::IsNullOrEmpty($UserID)) {
-        $OpenStackIdentityProvider.GetUser($UserID, $null)
+        return $OpenStackIdentityProvider.GetUser($UserID, $null)
     }
 
     if (-Not [string]::IsNullOrEmpty($UserEmail)) {
-        $OpenStackIdentityProvider.GetUsersByEmail($UserEmail, $null)
+        return $OpenStackIdentityProvider.GetUsersByEmail($UserEmail, $null)
     }
 
     if (-Not [string]::IsNullOrEmpty($UserName)) {
-        $OpenStackIdentityProvider.GetUserByName($UserName, $null)
+        return $OpenStackIdentityProvider.GetUserByName($UserName, $null)
     }
+
+    $OpenStackIdentityProvider.ListUsers($null)
 
 <#
  .SYNOPSIS
@@ -182,7 +184,10 @@ function Get-OpenStackIdentityUserRole {
         [Parameter(Position=1,Mandatory=$True)][string] $Account = $(throw "Please specify required Cloud Account with -Account parameter")
     )
 
-    Get-AuthToken($account)
+
+    $OpenStackIdentityProvider = Get-OpenStackIdentityProvider $Account
+    $OpenStackIdentityProvider.GetRolesByUser($UserID, $null)
+
 <#
  .SYNOPSIS
  Get a list roles which a specific user is asigned.
@@ -219,14 +224,19 @@ function Reset-OpenStackIdentityUserApi {
 
 function New-OpenStackIdentityUser {
     param (
-        [Parameter(Position=0,Mandatory=$True)][string] $UserName = $(throw "Specify the user name with -UserName"),
-        [Parameter(Position=1,Mandatory=$True)][string] $UserEmail = $(throw "Specify the user's email with -UserEmail"),
-        [Parameter(Position=2,Mandatory=$False)][string] $UserPass,
-        [Parameter(Position=3,Mandatory=$False)][switch] $Disabled,
-        [Parameter(Position=4,Mandatory=$True)][string] $Account = $(throw "Please specify required Cloud Account with -Account parameter")
+        [Parameter(Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
+        [Parameter(Mandatory=$True)] [string] $UserName = $(throw "Specify the user name with -UserName"),
+        [Parameter(Mandatory=$True)] [string] $UserEmail = $(throw "Specify the user's email with -UserEmail"),
+        [Parameter(Mandatory=$False)][string] $UserPass = $null,
+        [Parameter(Mandatory=$False)][bool]   $Enabled = $True
     )
 
-    Get-AuthToken($account)
+    $OpenStackIdentityProvider = Get-OpenStackIdentityProvider $Account
+
+#    NewUser newUser = new NewUser("MyNewUser","don.schenck@rackspace.com","MyPassword",true);
+    $user = New-Object -TypeName net.openstack.Core.Domain.NewUser -ArgumentList @($UserName,$UserEmail,$UserPass,$True)
+
+    return $OpenStackIdentityProvider.AddUser($user, $null)
 
 <#
  .SYNOPSIS
@@ -264,24 +274,44 @@ function New-OpenStackIdentityUser {
 
 function Remove-OpenStackIdentityUser {
     param (
-        [Parameter(Position=0,Mandatory=$True)][string] $UserID = $(throw "Specify the user ID with -UserID"),
-        [Parameter(Position=1,Mandatory=$True)][string] $Account = $(throw "Please specify required Cloud Account with -Account parameter")
+        [Parameter(Mandatory=$True)][string] $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
+        [Parameter(Mandatory=$True)][string] $UserID = $(throw "Specify the user ID with -UserID")
     )
 
-    Get-AuthToken($account)
-
+    $OpenStackIdentityProvider = Get-OpenStackIdentityProvider $Account
+    $OpenStackIdentityProvider.DeleteUser($UserID, $null)
+    
 }
 
 function Edit-OpenStackIdentityUser {
     param (
-        [Parameter(Position=0,Mandatory=$True)][string] $UserID = $(throw "Specify the user name with -UserID"),
-        [Parameter(Position=1,Mandatory=$False)][string] $UserName,
-        [Parameter(Position=2,Mandatory=$False)][string] $UserEmail,
-        [Parameter(Position=3,Mandatory=$False)][string] $UserPass,
-        [Parameter(Position=4,Mandatory=$False)] [ValidateSet("true","false")] [string] $Disabled,
-        [Parameter(Position=5,Mandatory=$False)] [ValidateSet("LON","DFW","ORD","IAD","HKG","SYD")] [string] $UserRegion,
-        [Parameter(Position=6,Mandatory=$True)][string] $Account = $(throw "Please specify required Cloud Account with -Account parameter")
+        [Parameter(Mandatory=$True)][string]  $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
+        [Parameter(Mandatory=$True)][string]  $UserID = $(throw "Specify the user name with -UserID"),
+        [Parameter(Mandatory=$False)][string] $UserName,
+        [Parameter(Mandatory=$False)][string] $UserEmail,
+        [Parameter(Mandatory=$False)][bool]   $Enabled = $True,
+        [Parameter(Mandatory=$False)][string] $DefaultRegion
     )
+
+    $OpenStackIdentityProvider = Get-OpenStackIdentityProvider $Account
+    $User = Get-OpenStackIdentityUser -Account $Account -UserID $UserID
+
+    if (-Not [string]::IsNullOrEmpty($DefaultRegion)) {
+        $User.DefaultRegion = $DefaultRegion
+    }
+
+    if (-Not [string]::IsNullOrEmpty($UserEmail)) {
+        $User.Email = $UserEmail
+    }
+
+    if (-Not [string]::IsNullOrEmpty($UserName)) {
+        $UserName = $UserName
+    }
+
+    $User.Enabled = $Enabled
+
+    $OpenStackIdentityProvider.UpdateUser($User, $null)
+
 
 <#
  .SYNOPSIS
@@ -325,6 +355,9 @@ function Add-OpenStackIdentityRoleForUser {
         [Parameter(Position=1,Mandatory=$True)][string] $RoleID = $(throw "Specify the role ID with -RoleID"),
         [Parameter(Position=2,Mandatory=$True)][string] $Account = $(throw "Please specify required Cloud Account with -Account")
     )
+
+    $OpenStackIdentityProvider = Get-OpenStackIdentityProvider $Account
+    $OpenStackIdentityProvider.AddRoleToUser($UserID, $RoleID, $null)
 
 <#
  .SYNOPSIS
