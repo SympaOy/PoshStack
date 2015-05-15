@@ -487,7 +487,7 @@ function Update-OpenStackComputeServer {
 function Get-OpenStackComputeServerFlavor {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required OpenStack Account with -account parameter"),
-        [Parameter (Mandatory=$False)][string] $FlavorId,
+        [Parameter (Mandatory=$False)][string] $FlavorId = [string]::Empty,
         [Parameter (Mandatory=$False)][string] $RegionOverride,
         [Parameter (Mandatory=$False)][int]    $MinDiskInGB,
         [Parameter (Mandatory=$False)][int]    $MinRamInMB,
@@ -512,7 +512,8 @@ function Get-OpenStackComputeServerFlavor {
         }
 
         # DEBUGGING       
-        Write-Debug -Message "Get-OpenStackComputeServerFlavor"     
+        Write-Debug -Message "Get-OpenStackComputeServerFlavor"   
+        Write-Debug -Message "FlavorId......: $FlavorId"  
         Write-Debug -Message "Details.......: $Details"
         Write-Debug -Message "Account.......: $Account" 
         Write-Debug -Message "Region........: $Region" 
@@ -521,12 +522,12 @@ function Get-OpenStackComputeServerFlavor {
         Write-Debug -Message "MarkerId......: $MarkerId" 
         Write-Debug -Message "Limit.........: $Limit"  
 
-        if ($FlavorId -ne $null) {
+        if (![string]::IsNullOrEmpty($FlavorId)) {
             return $OpenStackComputeServersProvider.GetFlavor($FlavorId, $Region, $null)
         } else {
             # Get the list of Flavors
             if ($Details) {
-                $FlavorList = $OpenStackComputeServersProvider.ListFlavorsWithDetails($MinDiskInGB, $MinRamInMB, $MarkerId, $Limit, $Region, $null)
+                $FlavorList = $OpenStackComputeServersProvider.ListFlavorsWithDetails($MinDiskInGB, $MinRamInMB, $MarkerId, $Limit, $Region, $nul)
             } else {
                 $FlavorList = $OpenStackComputeServersProvider.ListFlavors($MinDiskInGB, $MinRamInMB, $MarkerId, $Limit, $Region, $null)
             }

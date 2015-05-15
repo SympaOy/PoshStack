@@ -94,7 +94,8 @@ function Get-OpenStackIdentityTenant {
         [Parameter(Mandatory=$True)][string] $Account = $(throw "Please specify required Cloud Account with -Account parameter")
     )
 
-    Get-AuthToken($account)
+    $OpenStackIdentityProvider = Get-OpenStackIdentityProvider $Account
+    $OpenStackIdentityProvider.ListTenants($null)
 
 <#
  .SYNOPSIS
@@ -210,16 +211,6 @@ function Get-OpenStackIdentityUserRole {
  .LINK
  http://docs.rackspace.com/auth/api/v2.0/auth-client-devguide/content/GET_listRoles_v2.0_OS-KSADM_roles_Role_Calls.html
 #>
-}
-
-function Reset-OpenStackIdentityUserApi {
-    param (
-        [Parameter(Position=0,Mandatory=$True)][string] $UserID = $(throw "Specify the user ID with -UserID"),
-        [Parameter(Position=1,Mandatory=$True)][string] $Account = $(throw "Please specify required Cloud Account with -Account parameter")
-    )
-    
-    Get-AuthToken($account)
-
 }
 
 function New-OpenStackIdentityUser {
@@ -385,12 +376,15 @@ function Add-OpenStackIdentityRoleForUser {
 #>
 }
 
-function Remove-OpenStackIdentityRoleForUser {
+function Remove-OpenStackIdentityRoleFromUser {
     param (
         [Parameter(Position=0,Mandatory=$True)][string] $UserID = $(throw "Specify the user ID with -UserID"),
         [Parameter(Position=1,Mandatory=$True)][string] $RoleID = $(throw "Specify the role ID with -RoleID"),
         [Parameter(Position=2,Mandatory=$True)][string] $Account = $(throw "Please specify required Cloud Account with -Account")
     )
+
+    $OpenStackIdentityProvider = Get-OpenStackIdentityProvider $Account
+    $OpenStackIdentityProvider.DeleteRoleFromUser($UserID, $RoleID, $null)
 
 <#
  .SYNOPSIS

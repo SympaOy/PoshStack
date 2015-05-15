@@ -1,2 +1,2 @@
 ﻿# Get a list of Cloud Database Flavors
-Get-CloudDatabaseFlavors -Account demo
+Get-OpenStackComputeServerFlavor -Account rackiad
