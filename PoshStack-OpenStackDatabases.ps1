@@ -295,16 +295,91 @@ function Get-OpenStackDatabaseFlavor {
 #>
 }
 
+# Issue 160
+function Revoke-OpenStackDatabaseUserAccess {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
+        [Parameter (Mandatory=$True)] [string] $Username = $(throw "Please specify required User Name with -Username parameter"),
+        [Parameter (Mandatory=$True)] [string] $DatabaseName = $(throw "Please specify required Database Name with -DatabaseName parameter"),
+        [Parameter (Mandatory=$True)] [string] $InstanceId = $(throw "Please specify required Instance ID with -InstanceId parameter")
+        )
 
-# Issue 162
-function Update-OpenStackDatabaseUser{
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Update-OpenStackDatabaseUser"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "Username......: $Username"
+        Write-Debug -Message "DatabaseName..: $DatabaseName"
+        Write-Debug -Message "InstanceId....: $InstanceId"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+
+
+        $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username
+        $dbiid = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+        
+        $ComputeDatabasesProvider.SetUserPasswordAsync($dbiid, $DatabaseName, $un, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Revoke user rights to a database.
+
+ .DESCRIPTION
+ The Revoke-OpenStackDatabaseUserAccess cmdlet allows you to revoke a user's access to a database.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against. 
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER Username
+ The user name of the person who's access you wish to revoke.
+
+ .PARAMETER DatabaseName
+ The database from which to revoke access.
+
+ .PARAMETER InstanceId
+ The Instance ID used to identify the cloud database.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file. 
+
+ .EXAMPLE
+ PS C:\Users\Administrator> Revoke-OpenStackDatabaseUserAccess -Account rackiad -Username "myusername" -DatabaseName "MyDB" -InstanceId "e67b4aaf-5e6f-4fb8-968b-9a0cxxxxxxx" 
+ This example will revoke access for user "myusername" from the database "MyDB" in the given instance.
+
+ .LINK
+ http://http://api.rackspace.com/api-ref-databases.html
+#>
+}
+# Issue 161
+function Set-OpenStackDatabaseUserPassword {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
         [Parameter (Mandatory=$True)] [string] $Username = $(throw "Please specify required User Name with -Username parameter"),
         [Parameter (Mandatory=$True)] [string] $NewPassword = $(throw "Please specify required New Password with -NewPassword parameter"),
         [Parameter (Mandatory=$True)] [string] $InstanceId = $(throw "Please specify required Instance ID with -InstanceId parameter"),
-        [Parameter (Mandatory=$False)][string] $HostName = $null,
-        [Parameter (Mandatory=$False)][string] $IPAddress = $null,
         [Parameter (Mandatory=$False)][string] $RegionOverride
         )
 
@@ -332,27 +407,15 @@ function Update-OpenStackDatabaseUser{
         Write-Debug -Message "Username......: $Username"
         Write-Debug -Message "NewPassword...: $NewPassword"
         Write-Debug -Message "InstanceId....: $InstanceId"
-        Write-Debug -Message "HostName......: $HostName"
-        Write-Debug -Message "HostAddress...: $HostAddress"
         Write-Debug -Message "RegionOverride: $RegionOverride" 
 
 
 
-        if (![string]::IsNullOrEmpty($HostName)) {
-            $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username, $HostName
-
-        } ElseIf (-NOT [string]::IsNullOrEmpty($HostAddress)) {
-            $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username, $HostAddress
-
-        } Else {
-            $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username
-        }
-
-        $uuc = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UpdateUserConfiguration]) $un, $NewPassword
+        $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username
         $dbiid = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
         
-        $ComputeDatabasesProvider.UpdateUserAsync($dbiid, $un, $uuc, $CancellationToken).Result
+        $ComputeDatabasesProvider.SetUserPasswordAsync($dbiid, $un, $NewPassword, $CancellationToken).Result
 
     }
     catch {
@@ -363,7 +426,7 @@ function Update-OpenStackDatabaseUser{
  Update database use.
 
  .DESCRIPTION
- The Update-OpenStackDatabaseUser cmdlet allows you to change a user's password.
+ The Set-OpenStackDatabaseUserPassword cmdlet allows you to change a user's password.
  
  .PARAMETER Account
  Use this parameter to indicate which account you would like to execute this request against. 
@@ -378,17 +441,11 @@ function Update-OpenStackDatabaseUser{
  .PARAMETER InstanceId
  The Instance ID used to identify the cloud database.
 
- .PARAMETER HostName
- Optional, this is the host name where the cloud database resides. This is mutually exclusive of IPAddress.
-
- .PARAMETER IPAddress
- Optional, this is the IP Address where the cloud database reside. This is mutually exclusive of HostName.
-
  .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file. 
 
  .EXAMPLE
- PS C:\Users\Administrator> Update-OpenStackDatabaseUser -Account rackiad -Username "myusername" -NewPassword "MyNewPa55w0rd" -InstanceId "e67b4aaf-5e6f-4fb8-968b-9a0cxxxxxxx" 
+ PS C:\Users\Administrator> Update-OpenStackDatabaseUserPassword -Account rackiad -Username "myusername" -NewPassword "MyNewPa55w0rd" -InstanceId "e67b4aaf-5e6f-4fb8-968b-9a0cxxxxxxx" 
  This example will set the password for user "myusername" for the instance specified.
 
  .LINK
