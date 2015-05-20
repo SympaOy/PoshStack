@@ -295,13 +295,63 @@ function Get-OpenStackDatabaseFlavor {
 #>
 }
 
+# Issue 144
+function Get-OpenStackDatabaseUser {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
+        [Parameter (Mandatory=$True)] [string] $Username = $(throw "Please specify required User Name with -Username parameter"),
+        [Parameter (Mandatory=$True)] [string] $InstanceId = $(throw "Please specify required Instance ID with -InstanceId parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+        )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDatabaseUser"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "Username......: $Username"
+        Write-Debug -Message "InstanceId....: $InstanceId"
+        Write-Debug -Message "Region........: $Region"
+
+
+
+        $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username
+        $dbiid = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+        
+        Return $ComputeDatabasesProvider.GetUserAsync($dbiid, $un, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+}
+
 # Issue 160
 function Revoke-OpenStackDatabaseUserAccess {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
         [Parameter (Mandatory=$True)] [string] $Username = $(throw "Please specify required User Name with -Username parameter"),
         [Parameter (Mandatory=$True)] [string] $DatabaseName = $(throw "Please specify required Database Name with -DatabaseName parameter"),
-        [Parameter (Mandatory=$True)] [string] $InstanceId = $(throw "Please specify required Instance ID with -InstanceId parameter")
+        [Parameter (Mandatory=$True)] [string] $InstanceId = $(throw "Please specify required Instance ID with -InstanceId parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+
         )
 
     Get-OpenStackAccount -Account $Account
@@ -328,7 +378,7 @@ function Revoke-OpenStackDatabaseUserAccess {
         Write-Debug -Message "Username......: $Username"
         Write-Debug -Message "DatabaseName..: $DatabaseName"
         Write-Debug -Message "InstanceId....: $InstanceId"
-        Write-Debug -Message "RegionOverride: $RegionOverride" 
+        Write-Debug -Message "Region........: $Region"
 
 
 
