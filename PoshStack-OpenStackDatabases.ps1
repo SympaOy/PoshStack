@@ -343,6 +343,54 @@ function Get-OpenStackDatabaseUser {
     }
 }
 
+# Issue 154 Implement Remove-OpenStackDatabase
+function Remove-OpenStackDatabase {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
+        [Parameter (Mandatory=$True)] [string] $InstanceId = $(throw "Please specify required Instance ID with -InstanceId parameter"),
+        [Parameter (Mandatory=$True)] [string] $DatabaseName = $(throw "Please specify required Database Name with -DatabaseName parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+        )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Remove-OpenStackDatabaseInstance"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "InstanceId....: $InstanceId"
+        Write-Debug -Message "DatabaseName..: $DatabaseName"
+        Write-Debug -Message "Region........: $Region"
+
+
+
+        $dbiid = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
+        $dbname = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseName]) $DatabaseName
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $ComputeDatabasesProvider.RemoveDatabaseAsync($dbiid, $dbname, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+}
+
 # Issue 155 Implement Remove-OpenStackDatabaseInstance
 function Remove-OpenStackDatabaseInstance {
     Param(
