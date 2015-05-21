@@ -195,6 +195,7 @@ function New-OpenStackDatabase {
 function Get-OpenStackDatabaseInstance {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
+        [Parameter (Mandatory=$False)][string] $InstanceId = $null,
         [Parameter (Mandatory=$False)][string] $Marker = " ",
         [Parameter (Mandatory=$False)][int]    $Limit = 10000,
         [Parameter (Mandatory=$False)][string] $RegionOverride
@@ -224,8 +225,17 @@ function Get-OpenStackDatabaseInstance {
         Write-Debug -Message "RegionOverride: $RegionOverride" 
 
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
-        $mkr = New-Object ([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $Marker
-        $ComputeDatabasesProvider.ListDatabaseInstancesAsync($mkr, $Limit, $CancellationToken).Result
+
+        if (![string]::IsNullOrEmpty($InstanceId)) {
+            # Get one specific instance
+            $dbiid = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
+            $ComputeDatabasesProvider.GetDatabaseInstanceAsync($dbiid, $CancellationToken).Result
+            
+        } else {
+            # Get the list of Instances
+            $mkr = New-Object ([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $Marker
+            $ComputeDatabasesProvider.ListDatabaseInstancesAsync($mkr, $Limit, $CancellationToken).Result
+        }
     }
     catch {
         Invoke-Exception($_.Exception)
