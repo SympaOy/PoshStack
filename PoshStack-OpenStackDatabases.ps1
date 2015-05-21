@@ -57,11 +57,13 @@ function Get-OpenStackDatabasesProvider {
     }
 }
 
+# Issue 138
 function New-OpenStackDatabaseInstance {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
         [Parameter (Mandatory=$True)] [string] $InstanceName = $(throw "Please specify required Database Instance Name by using the -InstanceName parameter"),
         [Parameter (Mandatory=$True)] [string] $FlavorId = $(throw "Please specify required Database Flavor Id by using the -FlavorId parameter"),
+        [Parameter (Mandatory=$False)][bool]   $WaitForBuild = $False,
         [Parameter (Mandatory=$False)][int]    $SizeInGB = 5,
         [Parameter (Mandatory=$False)][string] $RegionOverride
     )
@@ -86,24 +88,61 @@ function New-OpenStackDatabaseInstance {
     try {
 
         # DEBUGGING       
-        Write-Debug -Message "Get-OpenStackDatabases"
+        Write-Debug -Message "New-OpenStackDatabaseInstance"
         Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "InstanceName..: $InstanceName"
+        Write-Debug -Message "FlavorId......: $FlavorId"
+        Write-Debug -Message "SizeinGB......: $SizeInGB"
         Write-Debug -Message "RegionOverride: $RegionOverride" 
 
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
-        $a = New-Object([net.openstack.Core.AsyncCompletionOption])
-      #  $AsyncCompletionOption = New-Object ([net.openstack.Core.AsyncCompletionOption]::RequestCompleted)
-        $AsyncCompletionOption = $a::RequestCompleted
         $flavorref = New-Object ([net.openstack.Providers.Rackspace.Objects.Databases.FlavorRef]) $FlavorId
         $dbVolumeConfig = New-Object ([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseVolumeConfiguration]) $SizeInGB
         $dbInstanceConfig = New-Object -Type ([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceConfiguration]) -ArgumentList @($flavorref, $dbVolumeConfig, $InstanceName)
-        $dbInstanceConfig.GetType()
-        $ComputeDatabasesProvider.CreateDatabaseInstanceAsync($dbInstanceConfig, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+
+        if($WaitForBuild) {
+            $ComputeDatabasesProvider.CreateDatabaseInstanceAsync($dbInstanceConfig, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+        } else {
+            $ComputeDatabasesProvider.CreateDatabaseInstanceAsync($dbInstanceConfig, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+        }
 
     }
     catch {
         Invoke-Exception($_.Exception)
     }
+<#
+ .SYNOPSIS
+ Create a new database instance.
+
+ .DESCRIPTION
+ The New-OpenStackDatabaseInstance cmdlet will create a new database instance.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against. 
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER InstanceName
+ Use this parameter to assign a friendly name to the instance.
+
+ .PARAMETER FlavorId
+ Use this parameter to specify the size of the RAM for the database.
+
+ .PARAMETER WaitForBuild
+ Use this parameter to specify whether you want to wait for the build to complete or return control to the script immediately.
+
+ .PARAMETER SizeInGB
+ Use this parameter to specify the size of the database.
+ If not specified, it will be 5 GB.
+  
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file. 
+
+ .EXAMPLE
+ PS C:\Users\Administrator> New-OpenStackDatabaseInstance -Account rackiad -InstanceName "ToBeDeleted" -FlavorId 2 -SizeInGB 5 -WaitForBuild $False
+
+ .LINK
+ http://docs.rackspace.com/cdb/api/v1.0/cdb-devguide/content/POST_createInstance__version___accountId__instances_Database_Instances.html
+#>
 }
 
 function Get-OpenStackDatabase {
