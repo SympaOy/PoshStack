@@ -63,7 +63,7 @@ function New-OpenStackDatabaseInstance {
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
         [Parameter (Mandatory=$True)] [string] $InstanceName = $(throw "Please specify required Database Instance Name by using the -InstanceName parameter"),
         [Parameter (Mandatory=$True)] [string] $FlavorId = $(throw "Please specify required Database Flavor Id by using the -FlavorId parameter"),
-        [Parameter (Mandatory=$False)][bool]   $WaitForBuild = $False,
+        [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
         [Parameter (Mandatory=$False)][int]    $SizeInGB = 5,
         [Parameter (Mandatory=$False)][string] $RegionOverride
     )
@@ -92,6 +92,7 @@ function New-OpenStackDatabaseInstance {
         Write-Debug -Message "Account.......: $Account" 
         Write-Debug -Message "InstanceName..: $InstanceName"
         Write-Debug -Message "FlavorId......: $FlavorId"
+        Write-Debug -Message "WaitForTask...: $WaitForTask"
         Write-Debug -Message "SizeinGB......: $SizeInGB"
         Write-Debug -Message "RegionOverride: $RegionOverride" 
 
@@ -100,7 +101,7 @@ function New-OpenStackDatabaseInstance {
         $dbVolumeConfig = New-Object ([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseVolumeConfiguration]) $SizeInGB
         $dbInstanceConfig = New-Object -Type ([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceConfiguration]) -ArgumentList @($flavorref, $dbVolumeConfig, $InstanceName)
 
-        if($WaitForBuild) {
+        if($WaitForTask) {
             $ComputeDatabasesProvider.CreateDatabaseInstanceAsync($dbInstanceConfig, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
         } else {
             $ComputeDatabasesProvider.CreateDatabaseInstanceAsync($dbInstanceConfig, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
@@ -176,8 +177,11 @@ function Get-OpenStackDatabase {
         # DEBUGGING       
         Write-Debug -Message "Get-OpenStackDatabases"
         Write-Debug -Message "Account.......: $Account" 
-        Write-Debug -Message "RegionOverride: $RegionOverride" 
+        Write-Debug -Message "InstanceId....: $InstanceId"
         Write-Debug -Message "Marker........: $Marker"
+        Write-Debug -Message "Limit.........: $Limit"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
 
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
         $iid = New-Object ([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
@@ -189,6 +193,36 @@ function Get-OpenStackDatabase {
     catch {
         Invoke-Exception($_.Exception)
     }
+<#
+ .SYNOPSIS
+ Get a list of databases.
+
+ .DESCRIPTION
+ The Get-OpenStackDatabase cmdlet allows you to retrieve a list of databases for a given database instance.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against. 
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER InstanceId
+ Use this parameter to specify the instance for which you wish to retrieve the list of databases.
+ 
+ .PARAMETER Marker
+ Use this parameter to specify the starting point for your list.
+ 
+ .PARAMETER Limit
+ Use this parameter to limit the size of the returned list. The maximum is 10,000 items. You can use paging (by using the Marker parameter) if you need to retrieve more than 10,000 items.
+   
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file. 
+
+ .EXAMPLE
+ PS C:\Users\Administrator> Get-OpenStackDatabase -Account demo -InstanceId e67b4aaf-5e6f-4fb8-968b-9a0c4727df67
+ This example will retrieve the databases associated with this instance.
+ 
+ .LINK
+ http://docs.rackspace.com/cdb/api/v1.0/cdb-devguide/content/GET_getDatabases__version___accountId__instances__instanceId__databases_databases.html
+#>
 }
 
 function New-OpenStackDatabase {
@@ -582,6 +616,56 @@ function Set-OpenStackDatabaseInstanceSize {
     }
 }
 
+# Issue 158
+function Set-OpenStackDatabaseInstanceVolumeSize {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
+        [Parameter (Mandatory=$True)] [int]    $VolumeSizeGB = $(throw "Please specify required Volume Size (in GB) with -VolumeSizeGB parameter"),
+        [Parameter (Mandatory=$True)] [string] $InstanceId = $(throw "Please specify required Instance ID with -InstanceId parameter"),
+        [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+        )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Set-OpenStackDatabaseInstanceSize"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "VolumeSizeGB..: $VolumeSizeGB"
+        Write-Debug -Message "InstanceId....: $InstanceId"
+        Write-Debug -Message "WaitForTask...: $WaitForTask"
+        Write-Debug -Message "Region........: $Region"
+
+        $dbiid = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+        
+        if($WaitForTask) {
+            $ComputeDatabasesProvider.ResizeDatabaseInstanceVolumeAsync($dbiid, $VolumeSizeGB, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+        } else {
+            $ComputeDatabasesProvider.ResizeDatabaseInstanceVolumeAsync($dbiid, $VolumeSizeGB, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+        }
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+}
 
 # Issue 160
 function Revoke-OpenStackDatabaseUserAccess {
