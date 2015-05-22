@@ -14,7 +14,12 @@ Description
 
 # Cloud account configuration file
 #$Global:PoshStackConfigFile = $env:USERPROFILE + "\Documents\WindowsPowerShell\Modules\PoshStack\CloudAccounts.csv" 
-$Global:PoshStackConfigFile = $openstackAccounts 
+$Global:PoshStackConfigFile = $openstackAccounts
+$Global:PoshStacCloudApiKeyIsSecureString = $false
+
+if ($cloudAPIKeyIsSecureString) {
+    $Global:PoshStacCloudApiKeyIsSecureString = $cloudAPIKeyIsSecureString
+}
 
 ############################################################################################
 #
@@ -71,7 +76,16 @@ function Get-OpenStackAccount {
     try {
         # Search $ConfigFile file for $account entry and populate temporary $conf with relevant details
         $Global:Credentials = Import-Csv $PoshStackConfigFile | Where-Object {$_.AccountName -eq $Account}
-        
+        # If CloudAPIKey is stored as secure string, decode it
+        if ($Global:PoshStacCloudApiKeyIsSecureString) {
+            $tmp = $Global:Credentials.CloudAPIKey
+            $tmp = `
+                [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR( `
+                    ($Global:Credentials.CloudAPIKey | ConvertTo-SecureString)) `
+                )
+
+            $Global:Credentials.CloudAPIKey = $tmp
+        }
 
         # Raise exception if specified $account is not found in conf file
         if ($Credentials.AccountName -eq $null) {
