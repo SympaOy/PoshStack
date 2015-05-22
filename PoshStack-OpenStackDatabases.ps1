@@ -228,8 +228,10 @@ function Get-OpenStackDatabase {
 function New-OpenStackDatabase {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
-        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId] $DBInstanceId = $(throw "-DBInstanceId parameter"),
-        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Databases.DatabaseConfiguration]    $DBConfiguration = $(throw "-DBConfiguration parameter"),
+        [Parameter (Mandatory=$True)] [string] $InstanceId = $(throw "Please specify required Instance ID with the -InstanceId parameter"),
+        [Parameter (Mandatory=$True)] [string] $DatabaseName = $(throw "Please specify required Database Name with the -DatabaseName parameter"),
+        [Parameter (Mandatory=$False)][string] $CharacterSet = $null,
+        [Parameter (Mandatory=$False)][string] $Collate = $null,
         [Parameter (Mandatory=$False)][string] $RegionOverride
         )
 
@@ -247,22 +249,69 @@ function New-OpenStackDatabase {
     }
 
 
-    $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
-
     try {
 
         # DEBUGGING       
         Write-Debug -Message "New-OpenStackDatabase"
         Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "InstanceId....: $InstanceId"
+        Write-Debug -Message "DatabaseName..: $DatabaseName"
+        Write-Debug -Message "CharacterSet..: $CharacterSet"
+        Write-Debug -Message "Collate.......: $Collate"
         Write-Debug -Message "RegionOverride: $RegionOverride" 
 
+        $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
+
+        $dbiid = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
+        $dbname = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseName]) $DatabaseName
+
+        if (![string]::IsNullOrEmpty($CharacterSet)) {
+            $DBConfiguration = New-Object -TypeName net.openstack.Providers.Rackspace.Objects.Databases.DatabaseConfiguration -ArgumentList @($dbname, $CharacterSet, $Collate)
+        } else {
+            $DBConfiguration = New-Object -TypeName net.openstack.Providers.Rackspace.Objects.Databases.DatabaseConfiguration -ArgumentList @($dbname)
+        }
+
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
-        $ComputeDatabasesProvider.CreateDatabaseAsync($DBInstanceId, $DBConfiguration, $CancellationToken).Result
+
+        $ComputeDatabasesProvider.CreateDatabaseAsync($dbiid, $DBConfiguration, $CancellationToken).Result
 
     }
     catch {
         Invoke-Exception($_.Exception)
     }
+<#
+ .SYNOPSIS
+ Create a new database.
+
+ .DESCRIPTION
+ The New-OpenStackDatabase cmdlet allows you to create a new cloud database.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against. 
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER InstanceId
+ Use this parameter to specify the instance that will contain this database.
+ 
+ .PARAMETER DatabaseName
+ Use this parameter to specify a user-friendly name to the database.
+  
+ .PARAMETER CharacterSet
+ When creating a MySQL database, you can use this optional parameter to specify the character set. For more information, see http://dev.mysql.com/doc/refman/5.1/en/charset-general.html.
+
+ .PARAMETER Collate
+ When creating a MySQL database, you can use this optional parameter to specify the collating sequence. For more information, see http://dev.mysql.com/doc/refman/5.1/en/charset-general.html.
+  
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file. 
+
+ .EXAMPLE
+ PS C:\Users\Administrator> New-OpenStackDatabase -Account demo -InstanceId e67b4aaf-5e6f-4fb8-968b-9a0c4727df67 -DatabaseName "MyDatabase"
+ This example creates the database "MyDatabase" in the specified instance..
+ 
+ .LINK
+ http://docs.rackspace.com/cdb/api/v1.0/cdb-devguide/content/POST_createDatabase__version___accountId__instances__instanceId__databases_databases.html
+#>
 }
 
 function Get-OpenStackDatabaseInstance {

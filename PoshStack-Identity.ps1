@@ -224,7 +224,6 @@ function New-OpenStackIdentityUser {
 
     $OpenStackIdentityProvider = Get-OpenStackIdentityProvider $Account
 
-#    NewUser newUser = new NewUser("MyNewUser","don.schenck@rackspace.com","MyPassword",true);
     $user = New-Object -TypeName net.openstack.Core.Domain.NewUser -ArgumentList @($UserName,$UserEmail,$UserPass,$True)
 
     return $OpenStackIdentityProvider.AddUser($user, $null)
