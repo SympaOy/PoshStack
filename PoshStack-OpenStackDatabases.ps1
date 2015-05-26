@@ -716,6 +716,56 @@ function Set-OpenStackDatabaseInstanceVolumeSize {
     }
 }
 
+# Issue 159
+function Restart-OpenStackDatabaseInstance {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
+        [Parameter (Mandatory=$True)] [string] $InstanceId = $(throw "Please specify required Instance ID with -InstanceId parameter"),
+        [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+        )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Update-OpenStackDatabaseUser"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "InstanceId....: $InstanceId"
+        Write-Debug -Message "WaitForTask...: $WaitForTask"
+        Write-Debug -Message "Region........: $Region"
+
+
+
+        $dbiid = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        If ($WaitForTask) {
+            $ComputeDatabasesProvider.RestartDatabaseInstanceAsync($dbiid, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+        } else {
+            $ComputeDatabasesProvider.RestartDatabaseInstanceAsync($dbiid, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+        }  
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+}
+
 # Issue 160
 function Revoke-OpenStackDatabaseUserAccess {
     Param(
