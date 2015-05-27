@@ -190,6 +190,108 @@ function New-OpenStackDatabaseInstance {
 #>
 }
 
+# Issue 139
+function New-OpenStackDatabaseUser {
+    Param(
+        [Parameter (Mandatory=$True)]  [string]   $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
+        [Parameter (Mandatory=$True)]  [string]   $Username = $(throw "Please specify required User Name with -Username parameter"),
+        [Parameter (Mandatory=$True)]  [string]   $Password = $(throw "Please specify required New Password with -NewPassword parameter"),
+        [Parameter (Mandatory=$True)]  [string]   $InstanceId = $(throw "Please specify required Instance ID with -InstanceId parameter"),
+        [Parameter (Mandatory=$True)]  [string[]] $ListOfDatabases = $(throw "Please specify required list of one or more databases with the -ListOfDatabases parameter"),
+        [Parameter (Mandatory=$False)] [string]   $HostName = $null,
+        [Parameter (Mandatory=$False)] [string]   $IPAddress = $null,
+        [Parameter (Mandatory=$False)] [string]   $RegionOverride
+        )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Update-OpenStackDatabaseUser"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "Username......: $Username"
+        Write-Debug -Message "Password......: $Password"
+        Write-Debug -Message "InstanceId....: $InstanceId"
+        Write-Debug -Message "ListOfDatabases $ListOfDatabases"
+        Write-Debug -Message "HostName......: $HostName"
+        Write-Debug -Message "IPAddress.....: $IPAddress"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+
+        if (![string]::IsNullOrEmpty($HostName)) {
+            $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username, $HostName
+        } ElseIf (-Not [string]::IsNullOrEmpty($IPAddress)) {
+            $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username, $IPAddress
+        } Else {
+            $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username
+        }
+
+        $userConfiguration = New-Object -TypeName net.openstack.Providers.Rackspace.Objects.Databases.UserConfiguration -ArgumentList @($un, $Password, $ListOfDatabases)
+
+        $dbiid = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+        
+
+        $ComputeDatabasesProvider.CreateUserAsync($dbiid, $userConfiguration, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Create a new database user account.
+
+ .DESCRIPTION
+ The New-OpenStackDatabaseUser cmdlet will create a new database user for one or more databases.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against. 
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER Username
+ Use this parameter to assign a friendly name to the user.
+
+ .PARAMETER Password
+ Use this parameter to specify the password for the user.
+
+ .PARAMETER InstanceId
+ Use this parameter to specify the database instance.
+
+ .PARAMETER ListOfDatabases
+ Use this parameter to specify a list of one or more databases within the specified instance to which you wish to grant access for the user.
+
+ .PARAMETER $HostName
+ Use this parameter OR the $IPAddress parameter if you need to disambiguate a username.
+  
+ .PARAMETER $IPAddress
+ Use this parameter OR the $HostName parameter if you need to disambiguate a username.
+    
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file. 
+
+ .EXAMPLE
+ PS C:\Users\Administrator> New-OpenStackDatabaseUser -Account demo -InstanceId e67b4aaf-5e6f-4fb8-968b-9a0c4727df67 -Username sa -Password "myN3wp4$$w0rd" -ListOfDatabases "ADatabase"
+
+ .LINK
+ http://docs.rackspace.com/cdb/api/v1.0/cdb-devguide/content/POST_createUser__version___accountId__instances__instanceId__users_user_management.html
+#>}
+
 function Get-OpenStackDatabase {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
@@ -931,7 +1033,6 @@ function Set-OpenStackDatabaseUserPassword {
         Write-Debug -Message "NewPassword...: $NewPassword"
         Write-Debug -Message "InstanceId....: $InstanceId"
         Write-Debug -Message "RegionOverride: $RegionOverride" 
-
 
 
         $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username
