@@ -292,6 +292,81 @@ function New-OpenStackDatabaseUser {
  http://docs.rackspace.com/cdb/api/v1.0/cdb-devguide/content/POST_createUser__version___accountId__instances__instanceId__users_user_management.html
 #>}
 
+# Issue 140
+function Enable-OpenStackDatabaseRootUser {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$True)] [string] $InstanceId = $(throw "Please specify required Database Instance Id by using the -InstanceId parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Enable-OpenStackDatabaseRootUser"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "InstanceId....: $InstanceId"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+        $instanceId = New-Object ([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
+
+        $ComputeDatabasesProvider.EnableRootUserAsync($instanceId, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Get a list of databases.
+
+ .DESCRIPTION
+ The Get-OpenStackDatabase cmdlet allows you to retrieve a list of databases for a given database instance.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against. 
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER InstanceId
+ Use this parameter to specify the instance for which you wish to retrieve the list of databases.
+ 
+ .PARAMETER Marker
+ Use this parameter to specify the starting point for your list.
+ 
+ .PARAMETER Limit
+ Use this parameter to limit the size of the returned list. The maximum is 10,000 items. You can use paging (by using the Marker parameter) if you need to retrieve more than 10,000 items.
+   
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file. 
+
+ .EXAMPLE
+ PS C:\Users\Administrator> Get-OpenStackDatabase -Account demo -InstanceId e67b4aaf-5e6f-4fb8-968b-9a0c4727df67
+ This example will retrieve the databases associated with this instance.
+ 
+ .LINK
+ http://docs.rackspace.com/cdb/api/v1.0/cdb-devguide/content/GET_getDatabases__version___accountId__instances__instanceId__databases_databases.html
+#>
+}
+
 function Get-OpenStackDatabase {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
