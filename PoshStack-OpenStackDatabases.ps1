@@ -703,6 +703,70 @@ function Get-OpenStackDatabaseUser {
     }
 }
 
+# Issue 145
+function Grant-CloudDatabaseUserAccess {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account with -Account parameter"),
+        [Parameter (Mandatory=$True)] [string] $InstanceId = $(throw "Please specify required Instance ID with -InstanceId parameter"),
+        [Parameter (Mandatory=$True)] [string] $DatabaseName = $(throw "Please specify required Database Name with -DatabaseName parameter"),
+        [Parameter (Mandatory=$True)] [string] $Username = $(throw "Please specify required User name with the -Username parameter"),
+        [Parameter (Mandatory=$False)][string] $HostName = $null,
+        [Parameter (Mandatory=$False)][string] $HostIPAddress = $null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+        )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Remove-OpenStackDatabaseInstance"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "InstanceId....: $InstanceId"
+        Write-Debug -Message "DatabaseName..: $DatabaseName"
+        Write-Debug -Message "Username......: $Username"
+        Write-Debug -Message "Host..........: $HostName"
+        Write-Debug -Message "HostIPAddress.: $HostIPAddress"
+        Write-Debug -Message "Region........: $Region"
+
+
+
+        $dbiid = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
+        $dbname = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseName]) $DatabaseName
+        
+        if (![string]::IsNullOrEmpty($HostName)) {
+            $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username, $HostName
+        } ElseIf (-Not [string]::IsNullOrEmpty($HostIPAddress)) {
+            $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username, $HostIPAddress
+        } Else {
+            $un = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.UserName]) $Username
+        }
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+
+        $ComputeDatabasesProvider.GrantUserAccessAsync($dbiid, $dbname, $un, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+}
+
 # Issue 154 Implement Remove-OpenStackDatabase
 function Remove-OpenStackDatabase {
     Param(
