@@ -101,6 +101,96 @@ function Confirm-OpenStackDatabaseRootEnabledStatus {
     }
 }
 
+# Issue 136
+function New-OpenStackDatabaseBackup {
+
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$True)] [string] $InstanceId = $(throw "Please specify required Instance ID by using the -InstanceId parameter"),
+        [Parameter (Mandatory=$True)] [string] $BackupName = $(throw "Please specify required Backup Name by using the BackupName parameter"),
+        [Parameter (Mandatory=$True)] [string] $BackupDescription = $(throw "Please specify required Backup Description by using the BackupDescription parameter"),
+        [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "New-OpenStackDatabaseInstance"
+        Write-Debug -Message "Account...........: $Account" 
+        Write-Debug -Message "InstanceId........: $InstanceId"
+        Write-Debug -Message "BackupName........: $BackupName"
+        Write-Debug -Message "BackupDescription.: $BackupDescription"
+        Write-Debug -Message "WaitForTask.......: $WaitForTask"
+        Write-Debug -Message "SizeinGB..........: $SizeInGB"
+        Write-Debug -Message "RegionOverride....: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+        $dbiid = New-Object([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
+        $BackupConfiguration = New-Object -Type ([net.openstack.Providers.Rackspace.Objects.Databases.BackupConfiguration]) -ArgumentList @($dbiid, $BackupName, $BackupDescription)
+
+
+        if($WaitForTask) {
+            $ComputeDatabasesProvider.CreateBackupAsync($BackupConfiguration, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+        } else {
+            $ComputeDatabasesProvider.CreateBackupAsync($BackupConfiguration, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+        }
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Create a new database backup.
+
+ .DESCRIPTION
+ The New-OpenStackDatabaseBackup cmdlet will create a launch a database backup.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against. 
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER InstanceId
+ Use this parameter to specify the instance for which you wish to make a backup.
+
+ .PARAMETER BackupName
+ Use this parameter to assign a friendly name to the backup.
+
+ .PARAMETER BackupDescription
+ Use this parameter to assign a description to the backup.
+ 
+ .PARAMETER WaitForBuild
+ Use this parameter to specify whether you want to wait for the build to complete or return control to the script immediately.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file. 
+
+ .EXAMPLE
+ PS C:\Users\Administrator> New-OpenStackDatabaseBackup -Account rackiad -InstanceId e67b4aaf-5e6f-4fb8-968b-9a0c4727df67 -BackupName "TEST" -BackupDescription "This is a test"
+
+ .LINK
+ http://api.rackspace.com/api-ref-databases.html
+#>
+}
+
 # Issue 138
 function New-OpenStackDatabaseInstance {
     Param(
@@ -364,6 +454,88 @@ function Enable-OpenStackDatabaseRootUser {
  
  .LINK
  http://docs.rackspace.com/cdb/api/v1.0/cdb-devguide/content/GET_getDatabases__version___accountId__instances__instanceId__databases_databases.html
+#>
+}
+
+# Issue 141
+function Get-OpenStackDatabaseBackup {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][string] $InstanceId = $null,
+        [Parameter (Mandatory=$False)][string] $BackupId = $null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDatabaseBackup"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "InstanceId....: $InstanceId"
+        Write-Debug -Message "BackupId......: $BackupId"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        if (![string]::IsNullOrEmpty($InstanceId)) {
+        Write-Host "IstanceId"
+            $instanceId = New-Object ([net.openstack.Providers.Rackspace.Objects.Databases.DatabaseInstanceId]) $InstanceId
+            $ComputeDatabasesProvider.ListBackupsForInstanceAsync($instanceId, $CancellationToken).Result
+        } ElseIf (-Not [string]::IsNullOrEmpty($BackupId)) {
+            $backupId = New-Object ([net.openstack.Providers.Rackspace.Objects.Databases.BackupId]) $BackupId
+            $ComputeDatabasesProvider.GetBackupAsync($backupId, $CancellationToken).Result
+        } Else {
+            $ComputeDatabasesProvider.ListBackupsAsync($CancellationToken).Result
+        }
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Retrieve database backup information.
+
+ .DESCRIPTION
+ The Get-OpenStackDatabaseBackup cmdlet will allow you to retrieve database backup information for a database, for a specific database instance, or one specific backup.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against. 
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER InstanceId
+ Use this parameter if you wish to retrieve backup information for a specific database instance. It is mutually exclusive of BackupId.
+
+ .PARAMETER BackupId
+ Use this parameter if you wish to retrieve a particular backup. It is mutually exclusive of InstanceId.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file. 
+
+ .EXAMPLE
+ PS C:\Users\Administrator> Get-OpenStackDatabaseBackup -Account rackiad -InstanceId e67b4aaf-5e6f-4fb8-968b-9a0c4727df67
+
+ This example will retrieve all backups for this database instance.
+
+ .LINK
+ http://api.rackspace.com/api-ref-databases.html
 #>
 }
 
