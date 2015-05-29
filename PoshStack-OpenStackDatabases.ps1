@@ -999,6 +999,78 @@ function Get-OpenStackDatabaseUserAccess {
     }
 }
 
+# Issue 153
+function Remove-OpenStackDatabaseBackup {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify the required Account with the -Account parameter"),
+        [Parameter (Mandatory=$True)] [string] $BackupId = $(throw "Please specify the required Backup ID with -BackupId parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $ComputeDatabasesProvider = Get-OpenStackDatabasesProvider -Account $Account -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Remove-OpenStackDatabaseBackup"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "InstanceId....: $InstanceId"
+        Write-Debug -Message "BackupId......: $BackupId"
+        Write-Debug -Message "Region........: $Region"
+
+
+
+        $backupId = New-Object ([net.openstack.Providers.Rackspace.Objects.Databases.BackupId]) $BackupId
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $ComputeDatabasesProvider.RemoveBackupAsync($backupId, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Delete a database backup.
+
+ .DESCRIPTION
+ The Remove-OpenStackDatabaseBackup cmdlet allows you to delete a specific database backup.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against. 
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER BackupId
+ Use this parameter to specify the backup you wish to delete.
+ 
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file. 
+
+ .EXAMPLE
+ PS C:\Users\Administrator> Remove-OpenStackDatabaseBackup -Account rackiad -BackupId 663ffa4c-78e5-441e-87cf-a483ad7e3145
+
+ This example will delete the specified backup.
+
+ .LINK
+ http://api.rackspace.com/api-ref-databases.html
+#>
+}
+
+
 # Issue 154 Implement Remove-OpenStackDatabase
 function Remove-OpenStackDatabase {
     Param(
