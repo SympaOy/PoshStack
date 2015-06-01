@@ -1519,3 +1519,5 @@ function Set-OpenStackDatabaseUserPassword {
  http://http://api.rackspace.com/api-ref-databases.html
 #>
 }
+
+Export-ModuleMember -Function *

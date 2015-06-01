@@ -410,3 +410,5 @@ function Remove-OpenStackIdentityRoleFromUser {
  http://docs.rackspace.com/auth/api/v2.0/auth-client-devguide/content/User_Calls.html
 #>
 }
+
+Export-ModuleMember -Function *
