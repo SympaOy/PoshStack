@@ -90,7 +90,8 @@ NestedModules =  @(
 "PoshStack-OpenStackBlockStorage.psm1",
 #"PoshStack-CloudNetworks.psm1",
 #"PoshStack-CloudServers.psm1",
-"PoshStack-OpenStackCompute.psm1"
+"PoshStack-OpenStackCompute.psm1",
+"PoshStack-OpenStackDNS.psm1"
 )
 
 # Functions to export from this module
