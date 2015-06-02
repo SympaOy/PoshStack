@@ -1331,3 +1331,5 @@ function Resize-OpenStackComputeServer {
 
 #>
 }
+
+Export-ModuleMember -Function *

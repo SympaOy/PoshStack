@@ -978,3 +978,5 @@ function Update-OpenStackObjectStorageObjectMetadata {
 #VerifyContainerIsCDNEnabled **TODO**
 function Test-OpenStackObjectStorageContainerCDNEnabled {
 }
+
+Export-ModuleMember -Function *

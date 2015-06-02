@@ -13,8 +13,8 @@ Description
 ############################################################################################>
 
 # Cloud account configuration file
-#$Global:PoshStackConfigFile = $env:USERPROFILE + "\Documents\WindowsPowerShell\Modules\PoshStack\CloudAccounts.csv" 
-$Global:PoshStackConfigFile = $openstackAccounts 
+$Global:PoshStackConfigFile = $env:USERPROFILE + "\Documents\WindowsPowerShell\Modules\PoshStack\CloudAccounts.csv" 
+#$Global:PoshStackConfigFile = $openstackAccounts 
 
 ############################################################################################
 #
@@ -134,3 +134,5 @@ function Show-OpenStackAccounts {
 
 #>
 }
+
+Export-ModuleMember -Function *
