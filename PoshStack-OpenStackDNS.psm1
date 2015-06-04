@@ -196,6 +196,42 @@ function Remove-OpenStackDNSPtrRecord {
     catch {
         Invoke-Exception($_.Exception)
     }
+<#
+ .SYNOPSIS
+ Remove Ptr record(s).
+
+ .DESCRIPTION
+ The Remove-OpenStackDNSPtrRecord cmdlet allows you to remove the Ptr record(s).
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER WaitForTask
+ Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
+
+ .PARAMETER ServiceName
+ Use this parameter to specify the name of the service.
+
+ .PARAMETER ServiceURI
+ Use this parameter to specify the URI of the service.
+
+ .PARAMETER IPAddress
+ Use this parameter to specify the IP Address.
+ 
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator> 
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
 }
 
 # Issue 43 Implement Update-CloudDNSDomains
