@@ -122,7 +122,7 @@ function Show-OpenStackAccounts {
  Display all configured cloud accounts that are avaialble to use.
 
  .DESCRIPTION
- The Show-CloudAccounts cmdlet will simply display a list of all coud accounts, which have been configured in the $Global:PoshStackConfigFile.
+ The Show-CloudAccounts cmdlet will simply display a list of all cloud accounts, which have been configured in the $Global:PoshStackConfigFile.
  
  .EXAMPLE
  PS H:\> Show-CloudAccounts
