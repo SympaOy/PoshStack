@@ -138,6 +138,110 @@ $DnsDomainRecordConfiguration = New-Object -Type ([net.openstack.Providers.Racks
  http://api.rackspace.com/api-ref-dns.html
 #>
 }
+ 
+# Issue 26 Implement Copy-CloudDNSDomain
+function Copy-OpenStackDNSDomain {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
+        [Parameter (Mandatory=$True)] [string] $DomainId = $(throw "Please specify the required Domain Id by using the -DomainId parameter"),
+        [Parameter (Mandatory=$True)] [string] $DomainName = $(throw "Please specify the required Domain Name by using the -DomainName parameter"),
+        [Parameter (Mandatory=$False)][bool]   $CloneSubdomains = $null,
+        [Parameter (Mandatory=$False)][bool]   $ModifyRecordData = $null,
+        [Parameter (Mandatory=$False)][bool]   $ModifyEmailAddress = $null,
+        [Parameter (Mandatory=$False)][bool]   $ModifyComment = $null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Copy-OpenStackDNSDomain"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "WaitForTask...: $WaitForTask"
+        Write-Debug -Message "DomainId......: $DomainId"
+        Write-Debug -Message "DomainName....: $DomainName"
+        Write-Debug -Message "CloneSubdomains: $CloneSubdomains"
+        Write-Debug -Message "ModifyRecordData: $ModifyRecordData"
+        Write-Debug -Message "ModifyEmailAddress: $ModifyEmailAddress"
+        Write-Debug -Message "ModifyComment.: $ModifyComment"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        if($WaitForTask) {
+            $DNSServiceProvider.CloneDomainAsync($DomainId, $DomainName, $CloneSubdomains, $ModifyRecordData, $ModifyEmailAddress, $ModifyComment, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+        } else {
+            $DNSServiceProvider.CloneDomainAsync($DomainId, $DomainName, $CloneSubdomains, $ModifyRecordData, $ModifyEmailAddress, $ModifyComment, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+        }
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Clone a domain.
+
+ .DESCRIPTION
+ The Copy-OpenStackDNSDomain cmdlet allows you to clone the DNS entries for one domain to another.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER WaitForTask
+ Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
+
+ .PARAMETER DomainId
+ Use this parameter to specify the domain.
+
+ .PARAMETER DomainName
+ Use this parameter to specify the name of the cloned domain.
+
+ .PARAMETER CloneSubdomains
+ True to recursively clone subdomains; otherwise, false to only clone the top-level domain and its records. Cloned subdomain configurations are modified the same way that cloned top-level domain configurations are modified. If this is null (or not supplied), a provider-specific default value is used.
+
+ .PARAMETER ModifyRecordData
+ True to replace occurrences of the reference domain name with the new domain name in comments on the cloned (new) domain. If this is null (or not supplied), a provider-specific default value is used.
+
+ .PARAMETER ModifyEmailAddress
+ True to replace occurrences of the reference domain name with the new domain name in email addresses on the cloned (new) domain. If this is null (or not supplied), a provider-specific default value is used.
+
+ .PARAMETER ModifyComment
+ True to replace occurrences of the reference domain name with the new domain name in data fields (of records) on the cloned (new) domain. Does not affect NS records. If this is null (or not supplied), a provider-specific default value is used.
+ 
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator> 
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
 
 # Issue 41 Implement Remove-CloudDNSPtrRecords
 function Remove-OpenStackDNSPtrRecord {
@@ -233,6 +337,90 @@ function Remove-OpenStackDNSPtrRecord {
  http://api.rackspace.com/api-ref-dns.html
 #>
 }
+
+# Issue 42 Implement Remove-CloudDNSRecords
+function Remove-OpenStackDNSRecord {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
+        [Parameter (Mandatory=$True)] [string] $DomainId = $(throw "Please specify the required Domain ID by using the -DomainId paramter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.RecordId[]] $RecordIdList = $(throw "Please specify the required list of Record IDs by using the -RecordIdList paramter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Remove-OpenStackDNSRecord"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "WaitForTask...: $WaitForTask"
+        Write-Debug -Message "DomainId......: $DomainId"
+        Write-Debug -Message "ServiceURI....: $ServiceURI"
+        Write-Debug -Message "RecordIdList..: $RecordIdList"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        if($WaitForTask) {
+            $DNSServiceProvider.RemoveRecordsAsync($DomainId, $RecordIdList, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+        } else {
+            $DNSServiceProvider.RemoveRecordsAsync($DomainId, $RecordIdList, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+        }
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Remove DNS record(s).
+
+ .DESCRIPTION
+ The Remove-OpenStackDNSRecord cmdlet allows you to remove DNS record(s).
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER WaitForTask
+ Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
+
+ .PARAMETER DomainId
+ Use this parameter to specify the domain.
+
+ .PARAMETER RecordIdList
+ Use this parameter to specify the list of records to be removed.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator> 
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>}
 
 # Issue 43 Implement Update-CloudDNSDomains
 function Update-OpenStackDNSDomain {
