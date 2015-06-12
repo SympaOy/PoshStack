@@ -65,7 +65,7 @@ function Add-OpenStackDNSPtrRecord {
         [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
         [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
         [Parameter (Mandatory=$True)] [string] $ServiceName = $(throw "Please specify the required Service Name by using the -ServiceName parameter"),
-        [Parameter (Mandatory=$True)] [string] $DeviceResourceURI,
+        [Parameter (Mandatory=$True)] [System.Uri] $DeviceResourceURI = $(throw "Please specify the required Device Resource URI by using the -DeviceResourceURI parameter"),
         [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DnsDomainRecordConfiguration[]] $DnsDomainRecordConfigurationList = $(throw "Please specify the required list of Domain Record Configurations by using the -DnsDomainRecordConfigurationList paramter"),
         [Parameter (Mandatory=$False)][string] $RegionOverride
     )
@@ -89,14 +89,14 @@ function Add-OpenStackDNSPtrRecord {
     try {
 
         # DEBUGGING       
-        Write-Debug -Message "Add-OpenStackDNSRecord"
-        Write-Debug -Message "Account.......: $Account" 
-        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
-        Write-Debug -Message "WaitForTask...: $WaitForTask"
-        Write-Debug -Message "ServiceName...: $ServiceName"
-        Write-Debug -Message "DeviceResourceURI: $DeviceResourceURI"
+        Write-Debug -Message "Add-OpenStackDNSPtrRecord"
+        Write-Debug -Message "Account.......................: $Account" 
+        Write-Debug -Message "UseInternalUrl..................: $UseInternalUrl" 
+        Write-Debug -Message "WaitForTask.....................: $WaitForTask"
+        Write-Debug -Message "ServiceName.....................: $ServiceName"
+        Write-Debug -Message "DeviceResourceURI...............: $DeviceResourceURI"
         Write-Debug -Message "DnsDomainRecordConfigurationList: $DnsDomainRecordConfigurationList"
-        Write-Debug -Message "RegionOverride: $RegionOverride" 
+        Write-Debug -Message "RegionOverride..................: $RegionOverride" 
 
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
 
@@ -153,7 +153,8 @@ function Add-OpenStackDNSRecord {
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
         [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
         [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
-        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DnsConfiguration] $DNSConfiguration,
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DomainId] $DomainId = $(throw "Please specify the required Domain Id by using the -DomainId parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DnsDomainRecordConfiguration[]] $DNSDomainRecordConfigurationList = $(throw "Please specify the required lis of DNS Domain Record Configurations by using the -DnsDomainRecordConfigurationList parameter"),
         [Parameter (Mandatory=$False)][string] $RegionOverride
     )
 
@@ -177,18 +178,19 @@ function Add-OpenStackDNSRecord {
 
         # DEBUGGING       
         Write-Debug -Message "Add-OpenStackDNSRecord"
-        Write-Debug -Message "Account.......: $Account" 
-        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
-        Write-Debug -Message "WaitForTask...: $WaitForTask"
-        Write-Debug -Message "DNSConfiguration: $DNSConfiguration"
-        Write-Debug -Message "RegionOverride: $RegionOverride" 
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "UseInternalUrl..................: $UseInternalUrl" 
+        Write-Debug -Message "WaitForTask.....................: $WaitForTask"
+        Write-Debug -Message "DomainId........................: $DomainId"
+        Write-Debug -Message "DNSDomainRecordConfigurationList: $DNSDomainRecordConfigurationList"
+        Write-Debug -Message "RegionOverride..................: $RegionOverride" 
 
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
 
         if($WaitForTask) {
-            $DNSServiceProvider.CreateDomainsAsync($DNSConfiguration, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+            $DNSServiceProvider.AddRecordsAsync($DomainId, $DNSDomainRecordConfigurationList, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
         } else {
-            $DNSServiceProvider.CreateDomainsAsync($DNSConfiguration, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+            $DNSServiceProvider.AddRecordsAsync($DomainId, $DNSDomainRecordConfigurationList, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
         }
 
     }
@@ -197,13 +199,13 @@ function Add-OpenStackDNSRecord {
     }
 <#
  .SYNOPSIS
- Create DNS record.
+ Add DNS records.
 
  .DESCRIPTION
- The Add-OpenStackDNSRecord cmdlet will add a DNS record.
+ The Add-OpenStackDNSRecord cmdlet allows you to add records to a domain in the DNS service.
 
  .PARAMETER Account
- Use this parameter to indicate which account you would like to execute this request against. 
+ Use this parameter to indicate which account you would like to execute this request against.
  Valid choices are defined in PoshStack configuration file.
 
  .PARAMETER UseInternalUrl
@@ -211,30 +213,32 @@ function Add-OpenStackDNSRecord {
 
  .PARAMETER WaitForTask
  Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
- 
- .PARAMETER DNSConfiguration
- This parameter is a complex, nested object of type [net.openstack.Providers.Rackspace.Object.Dns.DnsConfiguration] that contains the complete stack of DNS information for this process.
- 
+
+ .PARAMETER DomainId
+ This specified the domain.
+        
+ .PARAMETER DNSDomainRecordConfigurationList
+ A collection of objects of type [net.openstack.Providers.Rackspace.Objects.Dns.DnsDomainRecordConfiguration] describing the records to add.
+
  .PARAMETER RegionOverride
- This parameter will temporarily override the default region set in PoshStack configuration file. 
+ This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
- PS C:\Users\Administrator> N$TTL = New-TimeSpan -Seconds 100
-$DnsDomainRecordConfiguration = New-Object -Type ([net.openstack.Providers.Rackspace.Objects.Dns.DnsDomainRecordConfiguration]) -ArgumentList @([net.openstack.Providers.Rackspace.Objects.Dns.DnsRecordType]::A, "name", "data", $TTL, "comment", $null)
+ PS C:\Users\Administrator> 
 
 
  .LINK
  http://api.rackspace.com/api-ref-dns.html
 #>
 }
- 
+
 # Issue 26 Implement Copy-CloudDNSDomain
 function Copy-OpenStackDNSDomain {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
         [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
         [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
-        [Parameter (Mandatory=$True)] [string] $DomainId = $(throw "Please specify the required Domain Id by using the -DomainId parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DomainId] $DomainId = $(throw "Please specify the required Domain Id by using the -DomainId parameter"),
         [Parameter (Mandatory=$True)] [string] $DomainName = $(throw "Please specify the required Domain Name by using the -DomainName parameter"),
         [Parameter (Mandatory=$False)][bool]   $CloneSubdomains = $null,
         [Parameter (Mandatory=$False)][bool]   $ModifyRecordData = $null,
@@ -263,16 +267,16 @@ function Copy-OpenStackDNSDomain {
 
         # DEBUGGING       
         Write-Debug -Message "Copy-OpenStackDNSDomain"
-        Write-Debug -Message "Account.......: $Account" 
-        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
-        Write-Debug -Message "WaitForTask...: $WaitForTask"
-        Write-Debug -Message "DomainId......: $DomainId"
-        Write-Debug -Message "DomainName....: $DomainName"
-        Write-Debug -Message "CloneSubdomains: $CloneSubdomains"
-        Write-Debug -Message "ModifyRecordData: $ModifyRecordData"
+        Write-Debug -Message "Account...........: $Account" 
+        Write-Debug -Message "UseInternalUrl....: $UseInternalUrl" 
+        Write-Debug -Message "WaitForTask.......: $WaitForTask"
+        Write-Debug -Message "DomainId..........: $DomainId"
+        Write-Debug -Message "DomainName........: $DomainName"
+        Write-Debug -Message "CloneSubdomains...: $CloneSubdomains"
+        Write-Debug -Message "ModifyRecordData..: $ModifyRecordData"
         Write-Debug -Message "ModifyEmailAddress: $ModifyEmailAddress"
-        Write-Debug -Message "ModifyComment.: $ModifyComment"
-        Write-Debug -Message "RegionOverride: $RegionOverride" 
+        Write-Debug -Message "ModifyComment.....: $ModifyComment"
+        Write-Debug -Message "RegionOverride....: $RegionOverride" 
 
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
 
@@ -332,6 +336,87 @@ function Copy-OpenStackDNSDomain {
 #>
 }
 
+# Issue 27 Implement New-CloudDNSDomains
+function New-OpenStackDNSDomain {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DnsConfiguration] $DNSConfiguration,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "New-OpenStackDNSDomain"
+        Write-Debug -Message "Account.........: $Account" 
+        Write-Debug -Message "UseInternalUrl..: $UseInternalUrl" 
+        Write-Debug -Message "WaitForTask.....: $WaitForTask"
+        Write-Debug -Message "DNSConfiguration: $DNSConfiguration"
+        Write-Debug -Message "RegionOverride..: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        if($WaitForTask) {
+            $DNSServiceProvider.CreateDomainsAsync($DNSConfiguration, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+        } else {
+            $DNSServiceProvider.CreateDomainsAsync($DNSConfiguration, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+        }
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Create a domain.
+
+ .DESCRIPTION
+ The New-OpenStackDNSDomain cmdlet will create a domain.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against. 
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER WaitForTask
+ Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
+ 
+ .PARAMETER DNSConfiguration
+ This parameter is a complex, nested object of type [net.openstack.Providers.Rackspace.Object.Dns.DnsConfiguration] that contains the complete stack of DNS information for this process.
+ 
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file. 
+
+ .EXAMPLE
+ PS C:\Users\Administrator> N$TTL = New-TimeSpan -Seconds 100
+$DnsDomainRecordConfiguration = New-Object -Type ([net.openstack.Providers.Rackspace.Objects.Dns.DnsDomainRecordConfiguration]) -ArgumentList @([net.openstack.Providers.Rackspace.Objects.Dns.DnsRecordType]::A, "name", "data", $TTL, "comment", $null)
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
 # Issue 41 Implement Remove-CloudDNSPtrRecords
 function Remove-OpenStackDNSPtrRecord {
     Param(
@@ -339,7 +424,7 @@ function Remove-OpenStackDNSPtrRecord {
         [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
         [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
         [Parameter (Mandatory=$True)] [string] $ServiceName,
-        [Parameter (Mandatory=$True)] [Uri]    $ServiceURI,
+        [Parameter (Mandatory=$True)] [System.Uri]    $ServiceURI,
         [Parameter (Mandatory=$True)] [System.Net.IPAddress] $IPAddress,
         [Parameter (Mandatory=$False)][string] $RegionOverride
     )
@@ -433,7 +518,7 @@ function Remove-OpenStackDNSRecord {
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
         [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
         [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
-        [Parameter (Mandatory=$True)] [string] $DomainId = $(throw "Please specify the required Domain ID by using the -DomainId parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DomainId] $DomainId = $(throw "Please specify the required Domain ID by using the -DomainId parameter"),
         [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.RecordId[]] $RecordIdList = $(throw "Please specify the required list of Record IDs by using the -RecordIdList paramter"),
         [Parameter (Mandatory=$False)][string] $RegionOverride
     )
@@ -517,7 +602,7 @@ function Update-OpenStackDNSDomain {
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
         [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
         [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
-        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DNSDomainUpdateConfiguration[]] $DNSDomainUpdateConfigurationList,
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DNSDomainUpdateConfiguration[]] $DNSDomainUpdateConfigurationList = $(throw "Please specify required list of DNS Domain update configurations by using the -DNSDomainUpdateConfigurationList parameter"),
         [Parameter (Mandatory=$False)][string] $RegionOverride
     )
 
@@ -541,11 +626,11 @@ function Update-OpenStackDNSDomain {
 
         # DEBUGGING       
         Write-Debug -Message "Add-OpenStackDNSRecord"
-        Write-Debug -Message "Account.......: $Account" 
-        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
-        Write-Debug -Message "WaitForTask...: $WaitForTask"
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "UseInternalUrl..................: $UseInternalUrl" 
+        Write-Debug -Message "WaitForTask.....................: $WaitForTask"
         Write-Debug -Message "DNSDomainUpdateConfigurationList: $DNSDomainUpdateConfigurationList"
-        Write-Debug -Message "RegionOverride: $RegionOverride" 
+        Write-Debug -Message "RegionOverride..................: $RegionOverride" 
 
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
 
@@ -597,22 +682,11 @@ function Update-OpenStackDNSRecord {
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
         [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
         [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
-        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.IDnsService] $DomainId,
-        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DnsDomainRecordUpdateConfiguration[]] $DNSDomainRecordUpdateConfigurationList,
-        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DnsRecordType] $DNSRecordType,
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DomainId] $DomainId = $(throw "Please specify the required Domain ID by using the -DomainId parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DnsDomainRecordUpdateConfiguration[]] $DNSDomainRecordUpdateConfigurationList = $(throw "Please specify the required list of DNS Domain record update configurations by using the -DNSDomainRecordUpdateConfigurationList parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DnsRecordType] $DNSRecordType = $(throw "Please specify the required Record Type by using the -DNSRecordType parameter"),
         [Parameter (Mandatory=$False)][string] $RegionOverride
     )
-
-#            DomainId domainId = new DomainId("id");
-#
-#            int _offset = 0;
-#            int _limit = 100;
-#            Tuple<ReadOnlyCollectionPage<DnsRecord>,int?> recordlist = await provider.ListRecordsAsync(domainId, DnsRecordType.A, "recordname", "recordData", _offset, _limit, CancellationToken.None);
-#            DnsRecord recordToBeUpdated = recordlist.Item1[0];
-#            DnsDomainRecordUpdateConfiguration dnsDomainRecordUpdateConfiguration = new DnsDomainRecordUpdateConfiguration(recordToBeUpdated, "name", "data", TimeSpan.FromSeconds(100), "comment", priority);
-#            List<DnsDomainRecordUpdateConfiguration> dnsDomainRecordUpdateConfigurationList = new List<DnsDomainRecordUpdateConfiguration>();
-#            dnsDomainRecordConfigurationList.Add(dnsDomainRecordConfiguration);
-#            DnsJob ur = await provider.UpdateRecordsAsync(domainId, dnsDomainRecordUpdateConfigurationList, AsyncCompletionOption.RequestCompleted, CancellationToken.None, null);
 
     Get-OpenStackAccount -Account $Account
     
@@ -634,13 +708,13 @@ function Update-OpenStackDNSRecord {
 
         # DEBUGGING       
         Write-Debug -Message "Add-OpenStackDNSRecord"
-        Write-Debug -Message "Account.......: $Account" 
-        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
-        Write-Debug -Message "WaitForTask...: $WaitForTask"
-        Write-Debug -Message "DomainId......: $DomainId"
+        Write-Debug -Message "Account...............................: $Account" 
+        Write-Debug -Message "UseInternalUrl........................: $UseInternalUrl" 
+        Write-Debug -Message "WaitForTask...........................: $WaitForTask"
+        Write-Debug -Message "DomainId..............................: $DomainId"
         Write-Debug -Message "DNSDomainRecordUpdateConfigurationList: $DNSDomainRecordUpdateConfigurationList"
-        Write-Debug -Message "DNSRecordType.: $DNSRecordType"
-        Write-Debug -Message "RegionOverride: $RegionOverride" 
+        Write-Debug -Message "DNSRecordType.........................: $DNSRecordType"
+        Write-Debug -Message "RegionOverride........................: $RegionOverride" 
 
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
 
