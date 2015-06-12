@@ -676,6 +676,94 @@ function Update-OpenStackDNSDomain {
 #>
 }
 
+# Issue 44 Implement Update-CloudDNSPtrRecords
+function Update-OpenStackDNSPtrRecord {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
+        [Parameter (Mandatory=$True)] [string] $ServiceName = $(throw "Please specify the required Service Name by using the -ServiceName parameter"),
+        [Parameter (Mandatory=$True)] [System.Uri] $DeviceResourceUri = $(throw "Please specify the required Device Resource URI by using the -DeviceResourceUri parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DnsDomainRecordUpdateConfiguration[]] $DNSDomainRecordUpdateConfigurationList = $(throw "Please specify the required list of DNS Domain record update configurations by using the -DNSDomainRecordUpdateConfigurationList parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Update-OpenStackDNSPtrRecord"
+        Write-Debug -Message "Account...............................: $Account" 
+        Write-Debug -Message "UseInternalUrl........................: $UseInternalUrl" 
+        Write-Debug -Message "WaitForTask...........................: $WaitForTask"
+        Write-Debug -Message "ServiceName...........................: $ServiceName"
+        Write-Debug -Message "DNSDomainRecordUpdateConfigurationList: $DNSDomainRecordUpdateConfigurationList"
+        Write-Debug -Message "RegionOverride........................: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        if($WaitForTask) {
+            $DNSServiceProvider.UpdatePtrRecordsAsync($ServiceName, $DeviceResourceUri, $DNSDomainRecordUpdateConfigurationList, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+        } else {
+            $DNSServiceProvider.UpdatePtrRecordsAsync($ServiceName, $DeviceResourceUri, $DNSDomainRecordUpdateConfigurationList, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+        }
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Update reverse DNS records.
+
+ .DESCRIPTION
+ The Add-OpenStackDNSRecord cmdlet allows you to update reverse DNS records for a cloud resource in the DNS service.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER WaitForTask
+ Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
+
+ .PARAMETER ServiceName
+ The name of the service which owns the cloud resource.
+  
+ .PARAMETER DeviceResourceUri
+ The absolute URI of the cloud resource.
+        
+ .PARAMETER DNSDomainRecordConfigurationList
+ A collection of objects of type [net.openstack.Providers.Rackspace.Objects.Dns.DnsDomainRecordConfiguration] describing the records to update.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator> 
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
 # Issue 45
 function Update-OpenStackDNSRecord {
     Param(
