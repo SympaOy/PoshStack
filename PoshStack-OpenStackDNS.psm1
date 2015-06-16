@@ -460,7 +460,39 @@ function Get-OpenStackDNSJobStatus {
     catch {
         Invoke-Exception($_.Exception)
     }
+<#
+ .SYNOPSIS
+ Get a job's status.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSJobStatus cmdlet gets information about an asynchronous task being executed by the DNS service.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER Details
+ True to include detailed information about the job; otherwise, defaults to false.
+
+ .PARAMETER DNSJob
+ The object of type [net.openstack.Providers.Rackspace.Objects.Dns.DnsJob] to query.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
 }
+
+# Issue 30 Implement Get-CloudDNSDomainChanges
 
 # Issue 41 Implement Remove-CloudDNSPtrRecords
 function Remove-OpenStackDNSPtrRecord {
