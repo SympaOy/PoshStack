@@ -417,6 +417,51 @@ $DnsDomainRecordConfiguration = New-Object -Type ([net.openstack.Providers.Racks
 #>
 }
 
+# Issue 29 Implement Get-CloudDNSJobStatus
+function Get-OpenStackDNSJobStatus {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$False)][bool]   $Details = $False,
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DnsJob] $DNSJob = $(throw "Please specify the required DNS Job by using the -DNSJob parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSJobStatus"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "Details.......: $Details"
+        Write-Debug -Message "DNSJob........: $DNSJob"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.GetJobStatusAsync($DNSJob, $Details, $CancellationToken).Result
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+}
+
 # Issue 41 Implement Remove-CloudDNSPtrRecords
 function Remove-OpenStackDNSPtrRecord {
     Param(
