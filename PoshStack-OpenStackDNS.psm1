@@ -568,7 +568,7 @@ function Get-OpenStackDNSDomainChange {
 }
 
 # Issue 31 Implement Get-CloudDNSDomainDetails
-function Get-OpenStackDNSDomain {
+function Get-OpenStackDNSDomainDetail {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
         [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
@@ -597,7 +597,7 @@ function Get-OpenStackDNSDomain {
     try {
 
         # DEBUGGING       
-        Write-Debug -Message "Get-OpenStackDNSDomain"
+        Write-Debug -Message "Get-OpenStackDNSDomainDetail"
         Write-Debug -Message "Account.......: $Account" 
         Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
         Write-Debug -Message "DomainID......: $DomainID"
@@ -618,7 +618,7 @@ function Get-OpenStackDNSDomain {
  List domain details.
 
  .DESCRIPTION
- The Get-OpenStackDNSPtrRecord cmdlet gets detailed information about a specific domain..
+ The Get-OpenStackDNSDomainDetail cmdlet gets detailed information about a specific domain..
 
  .PARAMETER Account
  Use this parameter to indicate which account you would like to execute this request against.
@@ -648,6 +648,86 @@ function Get-OpenStackDNSDomain {
 #>
 }
 
+# Issue 32 Implement Get-CloudDNSDomains
+function Get-OpenStackDNSDomain {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$True)] [string] $DomainName = $(throw "Please specify the required Domain Name by using the -DomainName parameter"),
+        [Parameter (Mandatory=$False)][int]    $ListOffset = 0,
+        [Parameter (Mandatory=$False)][int]    $ListLimit = 100,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSDomain"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "DomainName....: $DomainName"
+        Write-Debug -Message "ListOffset...: $ListOffset"
+        Write-Debug -Message "ListLimit: $ListLimit"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.ListDomainsAsync($DomainName, $ListOffset, $ListLimit, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Get a  domain.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSDomain cmdlet gets a domain.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER DomainName
+ The name of the domain to be retrieved.
+
+ .PARAMETER ListOffset
+ If retrieving a list of ptr records (-Details $false), this indicates the starting point for the retrieval.
+
+ .PARAMETER ListLimit
+ If retrieving a list of ptr records (-Details $false), this indicates the number of records to be retrieved.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
 
 # Issue 35 Implement Get-CloudDNSPtrRecordDetails
 # Issue 36 Implement Get-CloudDNSPrtRecords
