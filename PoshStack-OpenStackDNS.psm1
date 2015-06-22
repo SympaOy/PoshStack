@@ -730,17 +730,95 @@ function Get-OpenStackDNSDomain {
 }
 
 # Issue 35 Implement Get-CloudDNSPtrRecordDetails
+function Get-OpenStackDNSPtrRecordDetail {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$True)] [string] $ServiceName = $(throw "Please specify the required Service Name by using the -ServiceName parameter"),
+        [Parameter (Mandatory=$True)] [System.Uri] $DeviceResourceURI = $(throw "Please specify the required Device Resource URI by using the -DeviceResourceURI parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.RecordId] $RecordID = $null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSPtrRecord"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "ServiceName...: $ServiceName"
+        Write-Debug -Message "DeviceResourceURI.........: $DeviceResourceURI"
+        Write-Debug -Message "RecordID......: $RecordID"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.ListPtrRecordDetailsAsync($ServiceName, $DeviceResourceURI, $RecordID, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ List DNS ptr record details.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSPtrRecord cmdlet gets information about reverse DNS records currently associated with a cloud resource in the DNS service.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER ServiceName
+ The name of the service being queried.
+
+ .PARAMETER DeviceResourceURI
+ The device resource URI.
+
+ .PARAMETER RecordID
+ The record ID if retrieving details (-Details $true).
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
 # Issue 36 Implement Get-CloudDNSPrtRecords
 function Get-OpenStackDNSPtrRecord {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
         [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
-        [Parameter (Mandatory=$False)][bool]   $Details = $False,
         [Parameter (Mandatory=$True)] [string] $ServiceName = $(throw "Please specify the required Service Name by using the -ServiceName parameter"),
         [Parameter (Mandatory=$True)] [System.Uri] $DeviceResourceURI = $(throw "Please specify the required Device Resource URI by using the -DeviceResourceURI parameter"),
         [Parameter (Mandatory=$False)][int]    $ListOffset = $null,
         [Parameter (Mandatory=$False)][int]    $ListLimit = $null,
-        [Parameter (Mandatory=$False)][net.openstack.Providers.Rackspace.Objects.Dns.RecordId] $RecordID = $null,
         [Parameter (Mandatory=$False)][string] $RegionOverride
     )
 
@@ -774,14 +852,7 @@ function Get-OpenStackDNSPtrRecord {
 
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
 
-# Tuple<ReadOnlyCollectionPage<DnsRecord>, int?> ptrList = await provider.ListPtrRecordsAsync("serviceName", DeviceResourceURI, _offset, _limit, CancellationToken.None);
-# DnsRecord detailedDNSRecord = await provider.ListPtrRecordDetailsAsync("serviceName", DeviceResourceURI, recordId, CancellationToken.None);
-
-        if ($Details) {
-            $DNSServiceProvider.ListPtrRecordDetailsAsync($ServiceName, $DeviceResourceURI, $RecordID, $CancellationToken).Result
-        } else {
-            $DNSServiceProvider.ListPtrRecordsAsync($ServiceName, $DeviceResourceURI, $ListOffset, $ListLimit, $CancellationToken).Result
-        }
+        $DNSServiceProvider.ListPtrRecordsAsync($ServiceName, $DeviceResourceURI, $ListOffset, $ListLimit, $CancellationToken).Result
 
     }
     catch {
@@ -815,15 +886,6 @@ function Get-OpenStackDNSPtrRecord {
 
  .PARAMETER ListLimit
  If retrieving a list of ptr records (-Details $false), this indicates the number of records to be retrieved.
-
- .PARAMETER RecordID
- The record ID if retrieving details (-Details $true).
-
- .PARAMETER DomainID
- The unique identifier of the domain.
-
- .PARAMETER Since
- The timestamp of the earliest changes to consider. If this is null, a provider-specific default value is used.
 
  .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
