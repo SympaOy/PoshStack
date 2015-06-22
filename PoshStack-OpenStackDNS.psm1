@@ -729,6 +729,82 @@ function Get-OpenStackDNSDomain {
 #>
 }
 
+# Issue 33 Implement Get-CloudDNSLimits
+function Get-OpenStackDNSLimit {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$False)][net.openstack.Providers.Rackspace.Objects.Dns.LimitType] $LimitType = $null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSPtrRecord"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "ServiceName...: $ServiceName"
+        Write-Debug -Message "DeviceResourceURI.........: $DeviceResourceURI"
+        Write-Debug -Message "RecordID......: $RecordID"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        if (![string]::IsNullOrEmpty($LimitType)) {
+            $DNSServiceProvider.ListLimitsAsync($LimitType, $CancellationToken).Result
+        } else {
+            $DNSServiceProvider.ListLimitsAsync($CancellationToken).Result
+        }
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ List domain limits.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSLimit cmdlet gets information about the provider-specific limits of this service.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER LimitType
+ The limit type (e.g. LimitType.DomainRecord).
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
 # Issue 35 Implement Get-CloudDNSPtrRecordDetails
 function Get-OpenStackDNSPtrRecordDetail {
     Param(
