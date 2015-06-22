@@ -1039,6 +1039,82 @@ function Get-OpenStackDNSPtrRecord {
 #>
 }
 
+# Issue 37 Implement Get-CloudDNSRecordDetails
+function Get-OpenStackDNSRecordDetail {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DomainId] $DomainId = $(throw "Please specify the required Domain ID by using the -DomainId parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.RecordId] $RecordId = $(throw "Please specify the required Record ID by using the -RecordId parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSRecordDetail"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "DomainId......: $DomainId"
+        Write-Debug -Message "RecordId......: $RecordId"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.ListRecordDetailsAsync($DomainId, $RecordId, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ List domain record details.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSRecordDetail cmdlet gets a list of detail information for the domain/record combination. 
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER DomainId
+ The Domain ID.
+ 
+ .PARAMETER RecordID
+ The Record ID.
+ 
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
 # Issue 41 Implement Remove-CloudDNSPtrRecords
 function Remove-OpenStackDNSPtrRecord {
     Param(
