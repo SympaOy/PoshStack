@@ -417,6 +417,882 @@ $DnsDomainRecordConfiguration = New-Object -Type ([net.openstack.Providers.Racks
 #>
 }
 
+# Issue 29 Implement Get-CloudDNSJobStatus
+function Get-OpenStackDNSJobStatus {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$False)][bool]   $Details = $False,
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DnsJob] $DNSJob = $(throw "Please specify the required DNS Job by using the -DNSJob parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSJobStatus"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "Details.......: $Details"
+        Write-Debug -Message "DNSJob........: $DNSJob"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.GetJobStatusAsync($DNSJob, $Details, $CancellationToken).Result
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Get a job's status.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSJobStatus cmdlet gets information about an asynchronous task being executed by the DNS service.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER Details
+ True to include detailed information about the job; otherwise, defaults to false.
+
+ .PARAMETER DNSJob
+ The object of type [net.openstack.Providers.Rackspace.Objects.Dns.DnsJob] to query.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
+# Issue 30 Implement Get-CloudDNSDomainChanges
+function Get-OpenStackDNSDomainChange {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DomainId] $DomainID = $(throw "Please specify the required Domain Id by using the -DomainID parameter"),
+        [Parameter (Mandatory=$True)] [DateTimeOffset] $Since = $(throw "Please specify the required starting time by using the -Since parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSDomainChange"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "DomainID......: $DomainID"
+        Write-Debug -Message "Since.........: $Since"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.ListDomainChangesAsync($DomainID, $Since, $CancellationToken).Result
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ List domain changes.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSJobStatus cmdlet gets information about all changes made to a domain since a specified time.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER DomainID
+ The unique identifier of the domain.
+
+ .PARAMETER Since
+ The timestamp of the earliest changes to consider. If this is null, a provider-specific default value is used.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
+# Issue 31 Implement Get-CloudDNSDomainDetails
+function Get-OpenStackDNSDomainDetail {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DomainId] $DomainID = $(throw "Please specify the required Domain ID by using the -DomainID parameter"),
+        [Parameter (Mandatory=$False)][bool]   $ShowRecords = $False,
+        [Parameter (Mandatory=$False)][bool]   $ShowSubdomains = $False,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSDomainDetail"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "DomainID......: $DomainID"
+        Write-Debug -Message "ShowRecords...: $ShowRecords"
+        Write-Debug -Message "ShowSubdomains: $ShowSubdomains"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.ListDomainDetailsAsync($DomainID, $ShowRecords, $ShowSubdomains, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ List domain details.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSDomainDetail cmdlet gets detailed information about a specific domain..
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER DomainID
+ The domain ID. This is obtained from net.openstack.Providers.Rackspace.Objects.Dns.DnsDomain.Id.
+
+ .PARAMETER ShowRecords
+ $True to populate the net.openstack.Providers.Rackspace.Objects.Dns.DnsDomain.Records property of the result; otherwise, false.
+
+ .PARAMETER ShowSubdomains
+ $True to populate the net.openstack.Providers.Rackspace.Objects.Dns.DnsDomain.Subdomains property of the result; otherwise, false.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
+# Issue 32 Implement Get-CloudDNSDomains
+function Get-OpenStackDNSDomain {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$True)] [string] $DomainName = $(throw "Please specify the required Domain Name by using the -DomainName parameter"),
+        [Parameter (Mandatory=$False)][int]    $ListOffset = 0,
+        [Parameter (Mandatory=$False)][int]    $ListLimit = 100,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSDomain"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "DomainName....: $DomainName"
+        Write-Debug -Message "ListOffset...: $ListOffset"
+        Write-Debug -Message "ListLimit: $ListLimit"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.ListDomainsAsync($DomainName, $ListOffset, $ListLimit, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Get a  domain.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSDomain cmdlet gets a domain.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER DomainName
+ The name of the domain to be retrieved.
+
+ .PARAMETER ListOffset
+ If retrieving a list of ptr records (-Details $false), this indicates the starting point for the retrieval.
+
+ .PARAMETER ListLimit
+ If retrieving a list of ptr records (-Details $false), this indicates the number of records to be retrieved.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
+# Issue 33 Implement Get-CloudDNSLimits
+function Get-OpenStackDNSLimit {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$False)][net.openstack.Providers.Rackspace.Objects.Dns.LimitType] $LimitType = $null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSLimit"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "OpenStackDNSLimit: $LimitType"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        if (![string]::IsNullOrEmpty($LimitType)) {
+            $DNSServiceProvider.ListLimitsAsync($LimitType, $CancellationToken).Result
+        } else {
+            $DNSServiceProvider.ListLimitsAsync($CancellationToken).Result
+        }
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ List domain limits.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSLimit cmdlet gets information about the provider-specific limits of this service.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER LimitType
+ The limit type (e.g. LimitType.DomainRecord).
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
+# Issue 34 Implement Get-CloudDNSLimitTypes
+function Get-OpenStackDNSLimitType {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSLimitType"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.ListLimitTypesAsync($CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ List domain limit types.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSLimitType cmdlet gets a list of all available Limit Types. 
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
+# Issue 35 Implement Get-CloudDNSPtrRecordDetails
+function Get-OpenStackDNSPtrRecordDetail {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$True)] [string] $ServiceName = $(throw "Please specify the required Service Name by using the -ServiceName parameter"),
+        [Parameter (Mandatory=$True)] [System.Uri] $DeviceResourceURI = $(throw "Please specify the required Device Resource URI by using the -DeviceResourceURI parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.RecordId] $RecordID = $null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSPtrRecord"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "ServiceName...: $ServiceName"
+        Write-Debug -Message "DeviceResourceURI.........: $DeviceResourceURI"
+        Write-Debug -Message "RecordID......: $RecordID"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.ListPtrRecordDetailsAsync($ServiceName, $DeviceResourceURI, $RecordID, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ List DNS ptr record details.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSPtrRecord cmdlet gets information about reverse DNS records currently associated with a cloud resource in the DNS service.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER ServiceName
+ The name of the service being queried.
+
+ .PARAMETER DeviceResourceURI
+ The device resource URI.
+
+ .PARAMETER RecordID
+ The record ID if retrieving details (-Details $true).
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
+# Issue 36 Implement Get-CloudDNSPrtRecords
+function Get-OpenStackDNSPtrRecord {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$True)] [string] $ServiceName = $(throw "Please specify the required Service Name by using the -ServiceName parameter"),
+        [Parameter (Mandatory=$True)] [System.Uri] $DeviceResourceURI = $(throw "Please specify the required Device Resource URI by using the -DeviceResourceURI parameter"),
+        [Parameter (Mandatory=$False)][int]    $ListOffset = $null,
+        [Parameter (Mandatory=$False)][int]    $ListLimit = $null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSPtrRecord"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "ServiceName...: $ServiceName"
+        Write-Debug -Message "DeviceResourceURI.........: $DeviceResourceURI"
+        Write-Debug -Message "ListOffset....: $ListOffset"
+        Write-Debug -Message "ListLimit.....: $ListLimit"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.ListPtrRecordsAsync($ServiceName, $DeviceResourceURI, $ListOffset, $ListLimit, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ List DNS ptr records.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSPtrRecord cmdlet gets information about reverse DNS records currently associated with a cloud resource in the DNS service.
+
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER Details
+ Set to $True if you wish to retrieve the details.
+
+ .PARAMETER ServiceName
+ The name of the service being queried.
+
+ .PARAMETER DeviceResourceURI
+ The device resource URI.
+
+ .PARAMETER ListOffset
+ If retrieving a list of ptr records (-Details $false), this indicates the starting point for the retrieval.
+
+ .PARAMETER ListLimit
+ If retrieving a list of ptr records (-Details $false), this indicates the number of records to be retrieved.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
+# Issue 37 Implement Get-CloudDNSRecordDetails
+function Get-OpenStackDNSRecordDetail {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DomainId] $DomainId = $(throw "Please specify the required Domain ID by using the -DomainId parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.RecordId] $RecordId = $(throw "Please specify the required Record ID by using the -RecordId parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSRecordDetail"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "DomainId......: $DomainId"
+        Write-Debug -Message "RecordId......: $RecordId"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.ListRecordDetailsAsync($DomainId, $RecordId, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ List domain record details.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSRecordDetail cmdlet gets a list of detail information for the domain/record combination. 
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER DomainId
+ The Domain ID.
+ 
+ .PARAMETER RecordID
+ The Record ID.
+ 
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
+# Issue 38 Implement Get-CloudDNSRecords
+function Get-OpenStackDNSRecord {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DomainId] $DomainId = $(throw "Please specify the required Domain ID by using the -DomainId parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.RecordType] $RecordType = $(throw "Please specify the required Record Type by using the -RecordType parameter"),
+        [Parameter (Mandatory=$True)] [string] $RecordName = $(throw "Please specify the required Record Name by using the -RecordName parameter"),
+        [Parameter (Mandatory=$True)] [string] $RecordData = $(throw "Please specify the required Record Data by using the -RecordData parameter"),
+        [Parameter (Mandatory=$False)][int]    $ListOffset = $null,
+        [Parameter (Mandatory=$False)][int]    $ListLimit = $null,      
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSRecord"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "DomainId......: $DomainId"
+        Write-Debug -Message "RecordType....: $RecordType"
+        Write-Debug -Message "RecordName....: $RecordName"
+        Write-Debug -Message "RecordData....: $RecordData"
+        Write-Debug -Message "ListOffset....: $ListOffset"
+        Write-Debug -Message "ListLimit.....: $ListLimit"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.ListRecordsAsync($DomainId, $RecordType, $RecordName, $RecordData, $ListOffset, $ListLimit, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ List domain records.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSRecord cmdlet gets a list of records for the domain.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER DomainId
+ The Domain ID.
+ 
+ .PARAMETER RecordType
+ The Record Type, e.g. A, CNAME, etc.
+ 
+ .PARAMETER RecordName
+ The Record Name.
+ 
+ .PARAMETER RecordData
+ The Record Data.
+ 
+ .PARAMETER ListOffset
+ This indicates the starting point for the retrieval.
+
+ .PARAMETER ListLimit
+ This indicates the number of records to be retrieved.
+ 
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
+# Issue 39 Implement Get-CloudDNSSubdomains
+function Get-OpenStackDNSSubdomain {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False,
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.Dns.DomainId] $DomainId = $(throw "Please specify the required Domain ID by using the -DomainId parameter"),
+        [Parameter (Mandatory=$False)][int]    $ListOffset = $null,
+        [Parameter (Mandatory=$False)][int]    $ListLimit = $null,      
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $DNSServiceProvider = Get-OpenStackDnsProvider -Account $Account -RegionOverride $Region -UseInternalUrl $UseInternalUrl
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackDNSSubdomain"
+        Write-Debug -Message "Account.......: $Account" 
+        Write-Debug -Message "UseInternalUrl: $UseInternalUrl" 
+        Write-Debug -Message "DomainId......: $DomainId"
+        Write-Debug -Message "ListOffset....: $ListOffset"
+        Write-Debug -Message "ListLimit.....: $ListLimit"
+        Write-Debug -Message "RegionOverride: $RegionOverride" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $DNSServiceProvider.ListSubdomainsAsync($DomainId, $ListOffset, $ListLimit, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ List subdomains.
+
+ .DESCRIPTION
+ The Get-OpenStackDNSSubdomain cmdlet gets a list of subdomains.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER UseInternalUrl
+ Use this parameter to specify whether or not an internal URL should be used when creating the DNS provider.
+
+ .PARAMETER DomainId
+ The Domain ID.
+ 
+ .PARAMETER ListOffset
+ This indicates the starting point for the retrieval.
+
+ .PARAMETER ListLimit
+ This indicates the number of records to be retrieved.
+ 
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-dns.html
+#>
+}
+
+
 # Issue 41 Implement Remove-CloudDNSPtrRecords
 function Remove-OpenStackDNSPtrRecord {
     Param(
