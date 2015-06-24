@@ -88,8 +88,7 @@ NestedModules =  @(
 #"PoshStack-CloudLoadBalancers.psm1",
 "PoshStack-Identity.psm1",
 "PoshStack-OpenStackBlockStorage.psm1",
-#"PoshStack-CloudNetworks.psm1",
-#"PoshStack-CloudServers.psm1",
+"PoshStack-OpenStackNetworks.psm1",
 "PoshStack-OpenStackCompute.psm1",
 "PoshStack-OpenStackDNS.psm1"
 )
