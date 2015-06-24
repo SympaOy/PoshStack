@@ -56,6 +56,71 @@ function Get-OpenStackNetworkProvider {
     }
 }
 
+# Issue 20 Implement Remove-CloudNetwork
+function Remove-OpenStackNetwork {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$True)] [string] $NetworkID = $(throw "Please specify the required Network ID by using the -NetworkID parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $NetworkProvider = Get-OpenStackNetworkProvider -Account $Account
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Remove-OpenStackNetwork"
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "NetworkID.......................: $NetworkID"
+        Write-Debug -Message "RegionOverride..................: $RegionOverride" 
+        Write-Debug -Message "Region..........................: $Region" 
+
+        $NetworkProvider.DeleteNetwork($NetworkID, $Region, $Null)
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Remove network
+
+ .DESCRIPTION
+ The Remove-OpenStackNetwork cmdlet will remove a network.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER NetworkID
+ The ID of the network to be removed.
+ 
+  .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-networks.html
+#>
+}
+
 # Issue 23 Implement Get-CloudNetwork
 function Get-OpenStackNetwork {
     Param(
@@ -83,7 +148,7 @@ function Get-OpenStackNetwork {
     try {
 
         # DEBUGGING       
-        Write-Debug -Message "Get-CloudNetwork"
+        Write-Debug -Message "Get-OpenStackNetwork"
         Write-Debug -Message "Account.........................: $Account" 
         Write-Debug -Message "NetworkID.......................: $NetworkID"
         Write-Debug -Message "RegionOverride..................: $RegionOverride" 
