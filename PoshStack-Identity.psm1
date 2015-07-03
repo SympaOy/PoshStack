@@ -224,7 +224,6 @@ function New-OpenStackIdentityUser {
 
     $OpenStackIdentityProvider = Get-OpenStackIdentityProvider $Account
 
-#    NewUser newUser = new NewUser("MyNewUser","don.schenck@rackspace.com","MyPassword",true);
     $user = New-Object -TypeName net.openstack.Core.Domain.NewUser -ArgumentList @($UserName,$UserEmail,$UserPass,$True)
 
     return $OpenStackIdentityProvider.AddUser($user, $null)
@@ -411,3 +410,5 @@ function Remove-OpenStackIdentityRoleFromUser {
  http://docs.rackspace.com/auth/api/v2.0/auth-client-devguide/content/User_Calls.html
 #>
 }
+
+Export-ModuleMember -Function *
