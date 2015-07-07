@@ -121,6 +121,76 @@ function Remove-OpenStackNetwork {
 #>
 }
 
+# Issue 22 Implement New-CloudNetwork
+function New-OpenStackNetwork {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$True)] [string] $NetworkName = $(throw "Please specify the required Network Name by using the -NetworkName parameter"),
+        [Parameter (Mandatory=$True)] [string] $CIDR = $(throw "Please specify the required CIDR (e.g. 10.1.0.0/24) by using the -CIDR parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $NetworkProvider = Get-OpenStackNetworkProvider -Account $Account
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "New-OpenStackNetwork"
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "NetworkName.....................: $NetworkName"
+        Write-Debug -Message "CIDR............................: $CIDR"
+        Write-Debug -Message "RegionOverride..................: $RegionOverride" 
+        Write-Debug -Message "Region..........................: $Region" 
+
+        $NetworkProvider.CreateNetwork($CIDR, $NetworkName, $Region, $Null)
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Create a network
+
+ .DESCRIPTION
+ The New-OpenStackNetwork cmdlet will create a network.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER NetworkName
+ The user-friendly name to be assigned to the network.
+ 
+ .PARAMETER CIDR
+ The inter-domain routing settings, e.g. 10.1.0.0/24.
+  
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-networks.html
+#>
+}
+
 # Issue 23 Implement Get-CloudNetwork
 function Get-OpenStackNetwork {
     Param(
