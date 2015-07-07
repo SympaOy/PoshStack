@@ -105,18 +105,21 @@ function New-OpenStackLoadBalancer {
     }
 <#
  .SYNOPSIS
- Remove network
+ Create Load Balancer
 
  .DESCRIPTION
- The Remove-OpenStackNetwork cmdlet will remove a network.
+ The New-OpenStackLoadBalancer cmdlet will create a new load balancer.
  
  .PARAMETER Account
  Use this parameter to indicate which account you would like to execute this request against.
  Valid choices are defined in PoshStack configuration file.
 
- .PARAMETER NetworkID
- The ID of the network to be removed.
+ .PARAMETER LBConfig
+ An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerConfiguration that describes the new Load Balancer.
  
+ .PARAMETER WaitForTask
+ Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
+
   .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
@@ -125,7 +128,7 @@ function New-OpenStackLoadBalancer {
 
 
  .LINK
- http://api.rackspace.com/api-ref-networks.html
+ http://api.rackspace.com/api-ref-load-balancers.html
 #>
 }
 
