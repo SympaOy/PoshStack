@@ -381,6 +381,85 @@ function Add-OpenStackLBNodeRange {
 #>
 }
 
+# Issue 53 Implement Add-CloudLoadBalancerVirtualAddress
+function Add-OpenStackLBVirtualAddress {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId] $LBID = $(throw "Please specify the required Load Balancer ID by using the -LBID parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerVirtualAddressType] $LBVirtAddrType = $(throw "Please specify the required Load Balancer Virtual Address Type to using the -LBVirtAddrType parameter"),
+        [Parameter (Mandatory=$True)] [System.Net.Sockets.AddressFamily] $AddressFamily = $(throw "Please specify the required Address Family by using the required -AddressFamily parameter"),
+        [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $LBProvider = Get-OpenStackLBProvider -Account rackiad -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Add-OpenStackLBVirtualAddress"
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "LBID............................: $LBID"
+        Write-Debug -Message "LBVirtAddrType..................: $LBVirtAddrType"
+        Write-Debug -Message "AddressType.....................: $AddressType"
+        Write-Debug -Message "WaitForTask.....................: $WaitForTask" 
+        Write-Debug -Message "Region..........................: $Region" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        if($WaitForTask) {
+            $LBProvider.AddVirtualAddressAsync($LBID, $LBVirtAddrType, $AddressFamily, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+        } else {
+            $LBProvider.AddVirtualAddressAsync($LBID, $LBVirtAddrType, $AddressFamily, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+        }
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Create Load Balancer
+
+ .DESCRIPTION
+ The New-OpenStackLoadBalancer cmdlet will create a new load balancer.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER LBConfig
+ An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerConfiguration that describes the new Load Balancer.
+ 
+ .PARAMETER WaitForTask
+ Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
+
+  .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-load-balancers.html
+#>
+}
+
 # Issue 55 Implement New-CloudLoadBalancer
 function New-OpenStackLoadBalancer {
     Param(
