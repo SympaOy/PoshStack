@@ -954,6 +954,7 @@ function Get-OpenStackLBNode {
 #>
 }
 
+# Issue 61 Implement Get-CloudLoadBalancerMetadataItem
 # Issue 74 Implement Get-CloudLoadBalancerMetadata
 function Get-OpenStackLBMetadata {
     Param(
