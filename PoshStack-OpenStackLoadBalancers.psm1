@@ -879,81 +879,6 @@ function Get-OpenStackLoadBalancer {
 #>
 }
 
-# Issue 62 Implement Get-CloudLoadBalancerNode
-function Get-OpenStackLBNode {
-    Param(
-        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
-        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId] $LBID = $(throw "Please specify the required Load Balancer ID by using the -LBID parameter"),
-        [Parameter (Mandatory=$False)][net.openstack.Providers.Rackspace.Objects.LoadBalancers.NodeID] $NodeID = $null,
-        [Parameter (Mandatory=$False)][string] $RegionOverride
-    )
-
-    Get-OpenStackAccount -Account $Account
-    
-    if ($RegionOverride){
-        $Global:RegionOverride = $RegionOverride
-    }
-
-    # Use Region code associated with Account, or was an override provided?
-    if ($RegionOverride) {
-        $Region = $Global:RegionOverride
-    } else {
-        $Region = $Credentials.Region
-    }
-
-
-    $LBProvider = Get-OpenStackLBProvider -Account rackiad -RegionOverride $Region
-
-    try {
-
-        # DEBUGGING       
-        Write-Debug -Message "Get-OpenStackLBNode"
-        Write-Debug -Message "Account.........................: $Account" 
-        Write-Debug -Message "LBID............................: $LBID"
-        Write-Debug -Message "NodeID..........................: $NodeID"
-        Write-Debug -Message "Region..........................: $Region" 
-
-        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
-
-        IF([string]::IsNullOrEmpty($NodeID)) {    
-            $LBProvider.ListNodesAsync($LBID, $CancellationToken).Result
-        } else {
-            $LBProvider.GetNodeAsync($LBID, $NodeID, $CancellationToken).Result
-        }
-
-    }
-    catch {
-        Invoke-Exception($_.Exception)
-    }
-<#
- .SYNOPSIS
- Get a node
-
- .DESCRIPTION
- The Get-OpenStackLBNode cmdlet will create one or more Load Balancer Nodes.
- 
- .PARAMETER Account
- Use this parameter to indicate which account you would like to execute this request against.
- Valid choices are defined in PoshStack configuration file.
-
- .PARAMETER LBID
- An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId that identifies the Load Balancer.
- 
- .PARAMETER NodeID
- An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.NodeId that identifies a specific Load Balancer Node.
-
-  .PARAMETER RegionOverride
- This parameter will temporarily override the default region set in PoshStack configuration file.
-
- .EXAMPLE
- PS C:\Users\Administrator>
-
-
- .LINK
- http://api.rackspace.com/api-ref-load-balancers.html
-#>
-}
-
 # Issue 61 Implement Get-CloudLoadBalancerMetadataItem
 # Issue 74 Implement Get-CloudLoadBalancerMetadata
 function Get-OpenStackLBMetadata {
@@ -1029,5 +954,161 @@ function Get-OpenStackLBMetadata {
  http://api.rackspace.com/api-ref-load-balancers.html
 #>
 }
+
+# Issue 62 Implement Get-CloudLoadBalancerNode
+function Get-OpenStackLBNode {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId] $LBID = $(throw "Please specify the required Load Balancer ID by using the -LBID parameter"),
+        [Parameter (Mandatory=$False)][net.openstack.Providers.Rackspace.Objects.LoadBalancers.NodeID] $NodeID = $null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $LBProvider = Get-OpenStackLBProvider -Account rackiad -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackLBNode"
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "LBID............................: $LBID"
+        Write-Debug -Message "NodeID..........................: $NodeID"
+        Write-Debug -Message "Region..........................: $Region" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        IF([string]::IsNullOrEmpty($NodeID)) {    
+            $LBProvider.ListNodesAsync($LBID, $CancellationToken).Result
+        } else {
+            $LBProvider.GetNodeAsync($LBID, $NodeID, $CancellationToken).Result
+        }
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Get a node
+
+ .DESCRIPTION
+ The Get-OpenStackLBNode cmdlet will create one or more Load Balancer Nodes.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER LBID
+ An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId that identifies the Load Balancer.
+ 
+ .PARAMETER NodeID
+ An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.NodeId that identifies a specific Load Balancer Node.
+
+  .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-load-balancers.html
+#>
+}
+
+# Issue 63 Implement Get-CloudLoadBalancerNodeMetadataItem
+function Get-CloudLoadBalancerNodeMetadataItem {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId] $LBID = $(throw "Please specify the required Load Balancer ID by using the -LBID parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.NodeId] $NodeID = $(throw "Please specify the required Node ID by using the -NodeID parameter"),
+        [Parameter (Mandatory=$False)][net.openstack.Providers.Rackspace.Objects.LoadBalancers.MetadataId] $MetadataID = $null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $LBProvider = Get-OpenStackLBProvider -Account rackiad -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-CloudLoadBalancerNodeMetadataItem"
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "LBID............................: $LBID"
+        Write-Debug -Message "NodeID..........................: $NodeID"
+        Write-Debug -Message "MetadataID......................: $MetadataID"
+        Write-Debug -Message "Region..........................: $Region" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        IF([string]::IsNullOrEmpty($MetadataID)) {    
+            $LBProvider.ListNodeMetadataAsync($LBID, $NodeID, $CancellationToken).Result
+        } else {
+            $LBProvider.GetNodeMetadataItemAsync($LBID, $NodeID, $MetadataID, $CancellationToken).Result
+        }
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Get metadata for a node.
+
+ .DESCRIPTION
+ The Get-CloudLoadBalancerNodeMetadataItem cmdlet will get metadata for a Load Balancer Node.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER LBID
+ An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId that identifies the Load Balancer.
+ 
+ .PARAMETER NodeID
+ An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.NodeId that identifies the Load Balancer Node..
+ 
+ .PARAMETER MetadataID
+ An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.MetadataId that identifies a specific Load Balancer metadata item.
+
+  .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-load-balancers.html
+#>
+}
+
 
 Export-ModuleMember -Function *
