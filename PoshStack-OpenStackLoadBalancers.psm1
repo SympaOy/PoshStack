@@ -1374,7 +1374,72 @@ function Get-OpenStackLBAccessList {
 #>
 }
 
-# Issue 69 Implemented Get-CloudLoadBalancerAlgorithms
+# Issue 68 Implement Get-CloudLoadBalancerAccountLevelUsage
+function Get-OpenStackLBAccountLevelUsage {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][DateTime] $StartTime = $Null,
+        [Parameter (Mandatory=$False)][DateTime] $EndTime = $Null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $LBProvider = Get-OpenStackLBProvider -Account rackiad -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackLBAccountLevelUsage"
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "StartTime.......................: $StartTime"
+        Write-Debug -Message "EndTime.........................: $EndTime"
+        Write-Debug -Message "Region..........................: $Region" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $LBProvider.ListAccountLevelUsageAsync($StartTime, $EndTime, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Get list of algorithms.
+
+ .DESCRIPTION
+ The Get-OpenStackLBAccountLevelUsage cmdlet gets a list of all possible Load Balancer algorithms.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+  .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-load-balancers.html
+#>
+}
+
+# Issue 69 Implement Get-CloudLoadBalancerAlgorithms
 function Get-OpenStackLBAlgorithmList {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
