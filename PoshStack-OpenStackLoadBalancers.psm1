@@ -125,7 +125,7 @@ function Add-OpenStackLBMetadata {
  .PARAMETER WaitForTask
  Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
 
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -205,7 +205,7 @@ function Add-OpenStackLBNode {
  .PARAMETER WaitForTask
  Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
 
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -289,7 +289,7 @@ function Add-OpenStackLBNodeMetadata {
  .PARAMETER WaitForTask
  Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
 
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -369,7 +369,7 @@ function Add-OpenStackLBNodeRange {
  .PARAMETER WaitForTask
  Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
 
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -448,7 +448,7 @@ function Add-OpenStackLBVirtualAddress {
  .PARAMETER WaitForTask
  Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
 
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -523,7 +523,7 @@ function New-OpenStackLoadBalancer {
  .PARAMETER WaitForTask
  Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
 
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -589,7 +589,7 @@ function Get-OpenStackLBConnectionLogging {
  .PARAMETER LBID
  An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerID that identifies the Load Balancer.
  
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -655,7 +655,7 @@ function Get-OpenStackLBContentCaching {
  .PARAMETER LBID
  An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerID that identifies the Load Balancer.
  
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -721,7 +721,7 @@ function Get-OpenStackLBErrorPage {
  .PARAMETER LBID
  An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerID that identifies the Load Balancer.
  
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -787,7 +787,7 @@ function Get-OpenStackLBHealthMonitor {
  .PARAMETER LBID
  An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerID that identifies the Load Balancer.
  
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -867,7 +867,7 @@ function Get-OpenStackLoadBalancer {
  .PARAMETER WaitForTask
  Use this parameter to specify whether you want to wait for the task to complete or return control to the script immediately.
 
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -943,7 +943,7 @@ function Get-OpenStackLBMetadata {
  .PARAMETER MetadataID
  An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.MetadataId that identifies a specific Load Balancer metadata item.
 
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -1018,7 +1018,7 @@ function Get-OpenStackLBNode {
  .PARAMETER NodeID
  An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.NodeId that identifies a specific Load Balancer Node.
 
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -1099,7 +1099,7 @@ function Get-CloudLoadBalancerNodeMetadataItem {
  .PARAMETER MetadataID
  An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.MetadataId that identifies a specific Load Balancer metadata item.
 
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -1165,7 +1165,7 @@ function Get-OpenStackLBSessionPersistence {
  .PARAMETER LBID
  An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerID that identifies the Load Balancer.
  
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -1231,7 +1231,7 @@ function Get-OpenStackLBSslConfiguration {
  .PARAMETER LBID
  An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerID that identifies the Load Balancer.
  
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -1297,7 +1297,7 @@ function Get-OpenStackLBStatistics {
  .PARAMETER LBID
  An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerID that identifies the Load Balancer.
  
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -1362,7 +1362,7 @@ function Get-OpenStackLBAccessList {
  .PARAMETER LBID
  An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerID that identifies the Load Balancer.
  
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -1426,8 +1426,14 @@ function Get-OpenStackLBAccountLevelUsage {
  .PARAMETER Account
  Use this parameter to indicate which account you would like to execute this request against.
  Valid choices are defined in PoshStack configuration file.
+ 
+ .PARAMETER StartTime
+ The start date to consider. The time component, if any, is ignored. If the value is null, the result includes all usage prior to the specified endTime.
 
-  .PARAMETER RegionOverride
+ .PARAMETER EndTime
+ The end date to consider. The time component, if any, is ignored. If the value is null, the result includes all usage following the specified startTime.
+
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
@@ -1489,7 +1495,88 @@ function Get-OpenStackLBAlgorithmList {
  Use this parameter to indicate which account you would like to execute this request against.
  Valid choices are defined in PoshStack configuration file.
 
-  .PARAMETER RegionOverride
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-load-balancers.html
+#>
+}
+
+# Issue 71 Implement Get-CloudLoadBalancerBillableLBs
+function Get-OpenStackLBBillableLBs {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$False)][DateTime] $StartTime = $Null,
+        [Parameter (Mandatory=$False)][DateTime] $EndTime = $Null,
+        [Parameter (Mandatory=$False)][int]    $Offset = 0,
+        [Parameter (Mandatory=$False)][int]    $Limit = $Null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $LBProvider = Get-OpenStackLBProvider -Account rackiad -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackLBBillableLBs"
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "StartTime.......................: $StartTime"
+        Write-Debug -Message "EndTime.........................: $EndTime"
+        Write-Debug -Message "Offset..........................: $Offset"
+        Write-Debug -Message "Limit...........................: $Limit"
+        Write-Debug -Message "Region..........................: $Region" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $LBProvider.ListBillableLoadBalancersAsync($StartTime, $EndTime, $Offset, $Limit, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Get list of algorithms.
+
+ .DESCRIPTION
+ The Get-OpenStackLBBillableLBs cmdlet gets a list of billable Load Balancers.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER StartTime
+ The start date to consider. The time component, if any, is ignored. If the value is null, the result includes all usage prior to the specified endTime.
+
+ .PARAMETER EndTime
+ The end date to consider. The time component, if any, is ignored. If the value is null, the result includes all usage following the specified startTime.
+
+ .PARAMETER Offset
+ The index of the last item in the previous page of results. If the value is null, the list starts at the beginning.
+
+ .PARAMETER Limit
+ Gets the maximum number of load balancers to return in a single page of results. If the value is null, a provider-specific default value is used.
+
+ .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
 
  .EXAMPLE
