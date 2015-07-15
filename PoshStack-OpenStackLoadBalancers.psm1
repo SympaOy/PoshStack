@@ -955,7 +955,8 @@ function Get-OpenStackLBMetadata {
 #>
 }
 
-# Issue 62 Implement Get-CloudLoadBalancerNode
+# Issue 62 Implemented Get-CloudLoadBalancerNode
+# Issue 77 Implemeneed Get-CloudLoadBalancerNodes
 function Get-OpenStackLBNode {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
