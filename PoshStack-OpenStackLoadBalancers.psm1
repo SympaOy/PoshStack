@@ -1630,7 +1630,7 @@ function Get-OpenStackLBCurrentUsage {
     }
 <#
  .SYNOPSIS
- Get access list.
+ Get usage.
 
  .DESCRIPTION
  The Get-OpenStackLBCurrentUsage cmdlet lists all usage for a specific load balancer during a preceding 24 hours
@@ -1653,5 +1653,82 @@ function Get-OpenStackLBCurrentUsage {
  http://api.rackspace.com/api-ref-load-balancers.html
 #>
 }
+
+# Issue 73 Implement Get-CloudLoadBalancerHistoricalUsage
+function Get-OpenStackLBHistoricalUsage {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId] $LBID = $(throw "Please specify the required Load Balancer ID by using the -LBID parameter"),
+        [Parameter (Mandatory=$False)][DateTime] $StartTime = $Null,
+        [Parameter (Mandatory=$False)][DateTime] $EndTime = $Null,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $LBProvider = Get-OpenStackLBProvider -Account rackiad -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackLBHistoricalUsage"
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "LBID............................: $LBID"
+        Write-Debug -Message "StartTime.......................: $StartTime"
+        Write-Debug -Message "EndTime.........................: $EndTime"
+        Write-Debug -Message "Region..........................: $Region" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $LBProvider.ListHistoricalUsageAsync($LBID, $StartTime, $EndTime, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Get historical usage.
+
+ .DESCRIPTION
+ The Get-OpenStackLBHistoricalUsage cmdlet lists all usage for a specific load balancer during a specified date range.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER LBID
+ An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerID that identifies the Load Balancer.
+ 
+ .PARAMETER StartTime
+ The start date to consider. The time component, if any, is ignored. If the value is null, the result includes all usage prior to the specified endTime.
+
+ .PARAMETER EndTime
+ The end date to consider. The time component, if any, is ignored. If the value is null, the result includes all usage following the specified startTime.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-load-balancers.html
+#>
+}
+
 
 Export-ModuleMember -Function *
