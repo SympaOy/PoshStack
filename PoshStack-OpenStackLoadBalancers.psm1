@@ -1792,5 +1792,80 @@ function Get-OpenStackLBHistoricalUsage {
 #>
 }
 
+# Issue 78 Implemented Get-CloudLoadBalancerNodeServiceEvents
+function Get-OpenStackLBNodeServiceEvent {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId] $LBID = $(throw "Please specify the required Load Balancer ID by using the -LBID parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.NodeServiceEventId] $MarkerID = $(throw "Please specify the required Marker ID by using the -MarkerID parameter"),
+        [Parameter (Mandatory=$False)][int]    $Limit = 100,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $LBProvider = Get-OpenStackLBProvider -Account rackiad -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Get-OpenStackLBNodeServiceEvent"
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "LBID............................: $LBID"
+        Write-Debug -Message "MarkerID........................: $MarkerID"
+        Write-Debug -Message "Limit...........................: $Limit"
+        Write-Debug -Message "Region..........................: $Region" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $LBProvider.ListNodeServiceEventsAsync($LBID, $MarkerID, $Limit, $CancellationToken).Result
+
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Get service events.
+
+ .DESCRIPTION
+ The Get-OpenStackLBNodeServiceEvent cmdlet lists the service events for a load balancer node
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER LBID
+ An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerID that identifies the Load Balancer.
+ 
+ .PARAMETER MarkerID
+ The net.openstack.Providers.Rackspace.Objects.LoadBalancers.NodeServiceEvent.Id of the last item in the previous list. If the value is null, the list starts at the beginning.
+
+ .PARAMETER Limit
+ Indicates the maximum number of items to return. Used for . If the value is null, a provider-specific default value is used.
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-load-balancers.html
+#>
+}
 
 Export-ModuleMember -Function *
