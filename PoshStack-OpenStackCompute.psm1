@@ -937,13 +937,13 @@ function New-OpenStackComputeServer {
         [Parameter(Mandatory=$true)] [string]$ServerName = $(throw "Please specify server name with -ServerName parameter"),
         [Parameter(Mandatory=$true)] [string]$ImageId = $(throw "Please specify the image Id with -ImageId parameter"),
         [Parameter(Mandatory=$true)] [string]$FlavorId = $(throw "Please specify server flavor with -FlavorId parameter"),
-        [Parameter(Mandatory=$false)][net.openstack.Core.Domain.DiskConfiguration]$DiskConfig,
-        [Parameter(Mandatory=$false)][net.openstack.Core.Domain.Metadata]$Metadata,
+        [Parameter(Mandatory=$false)][net.openstack.Core.Domain.DiskConfiguration]$DiskConfig = $Null,
+        [Parameter(Mandatory=$false)][net.openstack.Core.Domain.Metadata]$Metadata = $Null,
         [Parameter(Mandatory=$false)][bool]$AttachToServiceNetwork=$true,
         [Parameter(Mandatory=$false)][bool]$AttachToPublicNetwork=$true,
-        [Parameter(Mandatory=$false)][array]$Networks,
+        [Parameter(Mandatory=$false)][string[]]$Networks = $Null,
         [Parameter(Mandatory=$false)][ValidateCount(0,5)][string[]]$PersonalityFile,
-        [Parameter(Mandatory=$false)][string]$RegionOverride
+        [Parameter(Mandatory=$false)][string]$RegionOverride = $Null
     )
 
     $OpenStackComputeServersProvider = Get-OpenStackComputeProvider -Account $Account
