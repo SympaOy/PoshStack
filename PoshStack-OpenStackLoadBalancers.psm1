@@ -2062,11 +2062,13 @@ function Get-OpenStackLBVirtualAddressList {
 }
 
 # Issue 82 Implement Remove-CloudLoadBalancerAccessList
+# Issue 83 Implement Remove-CloudLoadBalancerAccessListRange
 function Remove-OpenStackLBAccessList {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
         [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId] $LBID = $(throw "Please specify the required Load Balancer ID by using the -LBID parameter"),
-        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.NetworkItemId] $NetworkItemID = $(throw "Please specify the required Network Item ID by using the -NetworkItemID parameter"),
+        [Parameter (Mandatory=$False)][net.openstack.Providers.Rackspace.Objects.LoadBalancers.NetworkItemId] $NetworkItemID = $Null,
+        [Parameter (Mandatory=$False)][net.openstack.Providers.Rackspace.Objects.LoadBalancers.NetworkItemId[]] $ListOfNetworkItemIDs = $Null,
         [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
         [Parameter (Mandatory=$False)][string] $RegionOverride
     )
@@ -2094,17 +2096,25 @@ function Remove-OpenStackLBAccessList {
         Write-Debug -Message "Account.........................: $Account" 
         Write-Debug -Message "LBID............................: $LBID"
         Write-Debug -Message "NetworkItemID...................: $NetworkItemID"
+        Write-Debug -Message "ListOfNetworkItemIDs............: $ListOfNetworkItemIDs"
         Write-Debug -Message "WaitForTask.....................: $WaitForTask"
         Write-Debug -Message "Region..........................: $Region" 
 
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
 
-        if($WaitForTask) {
-            $LBProvider.RemoveAccessListAsync($LBID, $NetworkItemID, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+        if (![string]::IsNullOrEmpty($NetworkItemID)) {
+            if($WaitForTask) {
+                $LBProvider.RemoveAccessListAsync($LBID, $NetworkItemID, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+            } else {
+                $LBProvider.RemoveAccessListAsync($LBID, $NetworkItemID, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+            }
         } else {
-            $LBProvider.RemoveAccessListAsync($LBID, $NetworkItemID, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+            if($WaitForTask) {
+                $LBProvider.RemoveAccessListRangeAsync($LBID, $ListOfNetworkItemIDs, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+            } else {
+                $LBProvider.RemoveAccessListRangeAsync($LBID, $ListOfNetworkItemIDs, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+            }
         }
-
     }
     catch {
         Invoke-Exception($_.Exception)
