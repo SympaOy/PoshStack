@@ -1,6 +1,8 @@
 [![Stories in Ready](https://badge.waffle.io/donschenck/poshstack.png?label=ready&title=Ready)](https://waffle.io/donschenck/poshstack)
 #PoshStack
 
+[![Join the chat at https://gitter.im/DonSchenck/PoshStack](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/DonSchenck/PoshStack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 #Description
 PoshStack is a Microsoft PowerShell v3 (or higher) client for OpenStack, built on the OpenStack.NET SDK v1.
 
