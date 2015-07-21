@@ -2300,10 +2300,12 @@ function Remove-OpenStackLBHealthMonitor {
 }
 
 # Issue 86 Implemented Remove-CloudLoadBalancer
+# Issue 88 Implemented Remove-CloudLoadBalancerRange
 function Remove-OpenStackLoadBalancer {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
-        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId] $LBID = $(throw "Please specify the required Load Balancer ID by using the -LBID parameter"),
+        [Parameter (Mandatory=$False)][net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId] $LBID = $null,
+        [Parameter (Mandatory=$False)][net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId[]] $ListOfLBIDs = $null,
         [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
         [Parameter (Mandatory=$False)][string] $RegionOverride
     )
@@ -2330,15 +2332,24 @@ function Remove-OpenStackLoadBalancer {
         Write-Debug -Message "Remove-OpenStackLoadBalancer"
         Write-Debug -Message "Account.........................: $Account" 
         Write-Debug -Message "LBID............................: $LBID"
+        Write-Debug -Message "ListOfLBIDs.....................: $ListOfLBIDs"
         Write-Debug -Message "WaitForTask.....................: $WaitForTask"
         Write-Debug -Message "Region..........................: $Region" 
 
         $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
 
-        if($WaitForTask) {
-            $LBProvider.RemoveLoadBalancerAsync($LBID, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+        if (![string]::IsNullOrEmpty($LBID)) {
+            if($WaitForTask) {
+                $LBProvider.RemoveLoadBalancerAsync($LBID, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+            } else {
+                $LBProvider.RemoveLoadBalancerAsync($LBID, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+            }
         } else {
-            $LBProvider.RemoveLoadBalancerAsync($LBID, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+            if($WaitForTask) {
+                $LBProvider.RemoveLoadBalancerRangeAsync($ListOfLBIDs, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+            } else {
+                $LBProvider.RemoveLoadBalancerRangeAsync($ListOfLBIDs, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+            }
         }
     }
     catch {
@@ -2442,5 +2453,6 @@ function Remove-OpenStackLBMetadataItem {
  http://api.rackspace.com/api-ref-load-balancers.html
 #>
 }
+
 
 Export-ModuleMember -Function *
