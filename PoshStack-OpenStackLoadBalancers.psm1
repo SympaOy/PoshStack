@@ -1971,7 +1971,7 @@ function Get-OpenStackLBThrottleList {
     }
 <#
  .SYNOPSIS
- Get usage.
+ Get throttling configuration.
 
  .DESCRIPTION
  The Get-OpenStackLBThrottleList cmdlet gets the connection throttling configuration for a load balancer.
@@ -2037,10 +2037,10 @@ function Get-OpenStackLBVirtualAddressList {
     }
 <#
  .SYNOPSIS
- Get usage.
+ Get virtual address list.
 
  .DESCRIPTION
- The Get-OpenStackLBVirtualAddressList cmdlet gets the connection throttling configuration for a load balancer.
+ The Get-OpenStackLBVirtualAddressList cmdlet gets the virtual addresses for a load balancer.
  
  .PARAMETER Account
  Use this parameter to indicate which account you would like to execute this request against.
@@ -2121,7 +2121,7 @@ function Remove-OpenStackLBAccessList {
     }
 <#
  .SYNOPSIS
- Get usage.
+ Remove access list.
 
  .DESCRIPTION
  The Remove-OpenStackLBAccessList cmdlet will remove a network item from the access list of a load balancer..
@@ -2198,7 +2198,7 @@ function Remove-OpenStackLBErrorPage {
     }
 <#
  .SYNOPSIS
- Get usage.
+ Remove error page.
 
  .DESCRIPTION
  The Remove-OpenStackLBErrorPage cmdlet will remove the error page for a load balancer.
@@ -2272,7 +2272,7 @@ function Remove-OpenStackLBHealthMonitor {
     }
 <#
  .SYNOPSIS
- Get usage.
+ Remove health monitor
 
  .DESCRIPTION
  The Remove-OpenStackLBHealthMonitor cmdlet will remove the health monitors for a load balancer.
@@ -2299,7 +2299,7 @@ function Remove-OpenStackLBHealthMonitor {
 #>
 }
 
-# Issue 86 Implement Remove-CloudLoadBalancer
+# Issue 86 Implemented Remove-CloudLoadBalancer
 function Remove-OpenStackLoadBalancer {
     Param(
         [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
@@ -2346,7 +2346,7 @@ function Remove-OpenStackLoadBalancer {
     }
 <#
  .SYNOPSIS
- Get usage.
+ Remove a load balancer.
 
  .DESCRIPTION
  The Remove-OpenStackLoadBalancer cmdlet will remove a load balancer.
@@ -2360,6 +2360,76 @@ function Remove-OpenStackLoadBalancer {
  
  .PARAMETER WaitForTask
  Specifies whether the calling function will wait for this task to complete (True) or continue without waiting (False).
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-load-balancers.html
+#>
+}
+
+# Issue #87 Implemented Remove-CloudLoadBalancerMetadataItem
+function Remove-OpenStackLBMetadataItem {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId] $LBID = $(throw "Please specify the required Load Balancer ID by using the -LBID parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.MetaDataId[]]   $ListOfMetaDataID = $(throw "Please specify the required list of Metadata IDs by using the -ListOfMetadataID parameter"),
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $LBProvider = Get-OpenStackLBProvider -Account rackiad -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Remove-OpenStackLBMetadataItem"
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "LBID............................: $LBID"
+        Write-Debug -Message "ListOfMetadataID................: $ListOfMetaDataID"
+        Write-Debug -Message "Region..........................: $Region" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        $LBProvider.RemoveLoadBalancerMetadataItemAsync($LBID, $ListOfMetaDataID, $CancellationToken).Result
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Remove metadata.
+
+ .DESCRIPTION
+ The Remove-OpenStackLBMetadataItem cmdlet will remove one or more metadata items from a load balancer.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER LBID
+ An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerID that identifies the Load Balancer.
+ 
+ .PARAMETER ListOfMetaDataID
+ A list of metadata ids that indicate which metadata items to be removed.
 
  .PARAMETER RegionOverride
  This parameter will temporarily override the default region set in PoshStack configuration file.
