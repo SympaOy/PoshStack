@@ -25,16 +25,16 @@ Import-Module PoshStack
 ```
 
 Once you've done that, you're ready to use PoshStack. Creating a virtual machine, also
-know has "spinning up a server", is as simple as using the New-ComputeServer cmdlet:
+know has "spinning up a server", is as simple as using the New-OpenStackComputeServer cmdlet:
 
 ```PowerShell
-New-ComputeServer -Account demo -ServerName MyNewServer -ImageId d69d55ef-cb4c-4787-9f1b-2de41ecac9a1 -FlavorId Performance1-2 -AttachToServiceNetwork $true -AttachToPublicNetwork $true
+New-OpenStackComputeServer -Account demo -ServerName MyNewServer -ImageId d69d55ef-cb4c-4787-9f1b-2de41ecac9a1 -FlavorId Performance1-2 -AttachToServiceNetwork $true -AttachToPublicNetwork $true
 ```
 
 Rather than explain this command here, use the following cmdlet in Powershell to get more information about New-ComputeServer:
 
 ```PowerShell
-Get-Help New-ComputeServer -Full
+Get-Help New-OpenStackComputeServer -Full
 ```
 
 
@@ -42,19 +42,19 @@ Get-Help New-ComputeServer -Full
 Cloud Object Storage Containers allow you to store and retrieve objects in the cloud.
 
 ### Creating a Cloud Object Storage Container
-You can create a Cloud Object Storage Container using the New-CloudObjectStorageContainer cmdlet. The only required information is the PoshStack account name and the name of the container:
+You can create a Cloud Object Storage Container using the New-OpenStackObjectStorageContainer cmdlet. The only required information is the PoshStack account name and the name of the container:
 ```PowerShell
-New-CloudObjectStorageContainer -Account demo -ContainerName MyNewContainer
+New-OpenStackObjectStorageContainer -Account demo -ContainerName MyNewContainer
 ```
 
 ### Uploading an Object to a Container
-Objects are uploaded to a container using the Add-CloudObjectStorageObjectFromFile cmdlet:
+Objects are uploaded to a container using the Add-OpenStackObjectStorageObjectFromFile cmdlet:
 ```PowerShell
-Add-CloudObjectStorageObjectFromFile -Account demo -FilePath C:\temp\kittens.jpg -ContainerName MyNewContainer
+Add-OpenStackObjectStorageObjectFromFile -Account demo -FilePath C:\temp\kittens.jpg -ContainerName MyNewContainer
 ```
 
 ### Downloading an Object from a Container
-Objects are downloaded from a container using the Copy-CloudObjectStorageObject cmdlet:
+Objects are downloaded from a container using the Copy-OpenStackObjectStorageObject cmdlet:
 ```Powershell
-Copy-CloudObjectStorageObject -Account demo -ContainerName MyNewContainer -Object kittens.jpg
+Copy-OpenStackObjectStorageObject -Account demo -ContainerName MyNewContainer -Object kittens.jpg
 ```
