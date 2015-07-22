@@ -2847,4 +2847,97 @@ function Remove-OpenStackLBThrottle {
 #>
 }
 
+# Issue 95 Implement Remove-CloudLoadBalancerVirtualAddress
+# Issue 96 Implement Remove-CloudLoadBalancerVirtualAddressRange
+function Remove-OpenStackLBVirtualAddress {
+    Param(
+        [Parameter (Mandatory=$True)] [string] $Account = $(throw "Please specify required Cloud Account by using the -Account parameter"),
+        [Parameter (Mandatory=$True)] [net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerId] $LBID = $null,
+        [Parameter (Mandatory=$False)][net.openstack.Providers.Rackspace.Objects.LoadBalancers.VirtualAddressId] $VirtualAddressID = $null,
+        [Parameter (Mandatory=$False)][net.openstack.Providers.Rackspace.Objects.LoadBalancers.VirtualAddressId[]] $ListOfVirtualAddressIDs = $null,
+        [Parameter (Mandatory=$False)][bool]   $WaitForTask = $False,
+        [Parameter (Mandatory=$False)][string] $RegionOverride
+    )
+
+    Get-OpenStackAccount -Account $Account
+    
+    if ($RegionOverride){
+        $Global:RegionOverride = $RegionOverride
+    }
+
+    # Use Region code associated with Account, or was an override provided?
+    if ($RegionOverride) {
+        $Region = $Global:RegionOverride
+    } else {
+        $Region = $Credentials.Region
+    }
+
+
+    $LBProvider = Get-OpenStackLBProvider -Account rackiad -RegionOverride $Region
+
+    try {
+
+        # DEBUGGING       
+        Write-Debug -Message "Remove-OpenStackLBVirtualAddress"
+        Write-Debug -Message "Account.........................: $Account" 
+        Write-Debug -Message "LBID............................: $LBID"
+        Write-Debug -Message "VirtualAddressID................: $VirtualAddressID"
+        Write-Debug -Message "ListOfVirtualAddressIDs.........: $ListOfVirtualAddressIDs"
+        Write-Debug -Message "WaitForTask.....................: $WaitForTask"
+        Write-Debug -Message "Region..........................: $Region" 
+
+        $CancellationToken = New-Object ([System.Threading.CancellationToken]::None)
+
+        if (![string]::IsNullOrEmpty($VirtualAddressID)) {
+            if($WaitForTask) {
+                $LBProvider.RemoveVirtualAddressAsync($LBID, $VirtualAddressID, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+            } else {
+                $LBProvider.RemoveVirtualAddressAsync($LBID, $VirtualAddressID, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+            }
+        } else {
+            if($WaitForTask) {
+                $LBProvider.RemoveVirtualAddressRangeAsync($LBID, $ListOfVirtualAddressIDs, [net.openstack.Core.AsyncCompletionOption]::RequestCompleted, $CancellationToken, $null).Result
+            } else {
+                $LBProvider.RemoveVirtualAddressRangeAsync($LBID, $ListOfVirtualAddressIDs, [net.openstack.Core.AsyncCompletionOption]::RequestSubmitted, $CancellationToken, $null).Result
+            }
+        }
+    }
+    catch {
+        Invoke-Exception($_.Exception)
+    }
+<#
+ .SYNOPSIS
+ Remove one or more nodes.
+
+ .DESCRIPTION
+ The Remove-OpenStackLBVirtualAddress cmdlet will remove one or more virtual addresses associated with a load balancer.
+ 
+ .PARAMETER Account
+ Use this parameter to indicate which account you would like to execute this request against.
+ Valid choices are defined in PoshStack configuration file.
+
+ .PARAMETER LBID
+ An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.LoadBalancerID that identifies the Load Balancer.
+
+ .PARAMETER VirtualAddressID
+ An object of type net.openstack.Providers.Rackspace.Objects.LoadBalancers.VirtualAddressId that identifies a single virtual address to be removed.
+
+ .PARAMETER ListOfVirtualAddressIDs
+ A list of virtual addresses to be removed.
+ 
+ .PARAMETER WaitForTask
+ Specifies whether the calling function will wait for this task to complete (True) or continue without waiting (False).
+
+ .PARAMETER RegionOverride
+ This parameter will temporarily override the default region set in PoshStack configuration file.
+
+ .EXAMPLE
+ PS C:\Users\Administrator>
+
+
+ .LINK
+ http://api.rackspace.com/api-ref-load-balancers.html
+#>
+}
+
 Export-ModuleMember -Function *
