@@ -681,7 +681,7 @@ function Copy-OpenStackObjectStorageObjectToFile {
         [Parameter (Mandatory=$False)][Array]  $Headers = $Null,
         [Parameter (Mandatory=$False)][string] $RegionOverride = $Null,
         [Parameter (Mandatory=$False)][bool]   $VerifyETag = $False,
-        [Parameter (Mandatory=$False)][long]   $ProgressUpdated = $Null,
+        [Parameter (Mandatory=$False)][AllowNull][System.Nullable[long]]   $ProgressUpdated = $Null,
         [Parameter (Mandatory=$False)][bool]   $UseInternalUrl = $False
     )
 
